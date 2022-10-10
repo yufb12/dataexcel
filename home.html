@@ -321,11 +321,17 @@
                         <span class="caret"></span>
                     </button>
                     <ul id="cellborder" class="dropdown-menu">
-                        <li title="all"><a>全部</a></li>
-                        <li title="left"><a>左</a></li>
-                        <li title="right"><a>右</a></li>
-                        <li title="top"><a>上</a></li>
-                        <li title="bottom"><a>下</a></li>
+                        <li title="all" onclick="SetCellBorder('all')"><a>全部</a></li>
+                        <li title="left" onclick="SetCellBorder('left')"><a>左</a></li>
+                        <li title="right" onclick="SetCellBorder('right')"><a>右</a></li>
+                        <li title="top" onclick="SetCellBorder('top')"><a>上</a></li>
+                        <li title="bottom" onclick="SetCellBorder('bottom')"><a>下</a></li>
+
+                        <li title="all" onclick="ClearCellBorder('all')"><a>清除所有边框</a></li>
+                        <li title="left" onclick="ClearCellBorder('left')"><a>清除左边框</a></li>
+                        <li title="right" onclick="ClearCellBorder('right')"><a>清除右边框</a></li>
+                        <li title="top" onclick="ClearCellBorder('top')"><a>清除上边框</a></li>
+                        <li title="bottom" onclick="ClearCellBorder('bottom')"><a>清除下边框</a></li>
                     </ul>
                 </div>
                 <!--文字对齐-->
@@ -456,8 +462,7 @@
                 <a href="download/dataexcel.rar"> API</a>
                 <a href="download/dataexcel.rar">git demo</a>
             </div>
-            <div>
-                合作
+            <div> 
                 <a href="about/wechat.jpg">
                     <img width="72" height="72" src="about/wechat.jpg" style="display:block" />
                 </a>
@@ -963,21 +968,43 @@ style = {
 
     <!--Border-->
     <script type="text/javascript">
-        let domcellborder = document.getElementById("cellborder");
-        domcellborderbingdingclikc();
-        function domcellborderbingdingclikc()
-        {
-            let ch = domcellborder.children;
-            for (var i = 0; i < ch.length; i++)
-            {
-                ch[i].addEventListener("click", SetCellBorder);
-            }
-        }
 
-        function SetCellBorder(e)
+
+        function SetCellBorder(border)
         {
-            let fontname = e.currentTarget.title;
-            grid.CommandCellBorder(fontname);
+            grid.CommandCellBorder(border);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ClearCellBorder(border)
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                switch (border)
+                {
+                    case "left":
+                        cell.LeftLineStyle = null;
+                        break;
+                    case "right":
+                        cell.RightLineStyle = null;
+                        break;
+                    case "top":
+                        cell.TopLineStyle = null;
+                        break;
+                    case "bottom":
+                        cell.BottomLineStyle = null;
+                        break;
+                    case "all":
+                        cell.LeftLineStyle = null;
+                        cell.RightLineStyle = null;
+                        cell.TopLineStyle = null;
+                        cell.BottomLineStyle = null;
+                        break;
+                    default:
+                }
+            }
             grid.Refresh();
             grid.RePaint();
         }
