@@ -1,0 +1,1929 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="./css/bootstrap.css" rel="stylesheet" />
+    <link href="./css/font-awesome.min.css" rel="stylesheet" />
+    <title>dataexcel 122152</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .body, html {
+            height: 100%;
+            width: 100%;
+        }
+
+        .DeleteColumn {
+            background: url("./Image/toolicon/insertdel/DeleteColumn.png")no-repeat;
+        }
+
+        .Merge {
+            background: url("./Image/toolicon/cell/Merge_16x16.png")no-repeat;
+        }
+
+        .clear-padding {
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/zrender.min.js"></script>
+    <script src="./js/dataexcel.js"></script>
+    <script src="./js/bootstrap.js"></script>
+    <script src="./js/jscolor.js"></script>
+    <script src="./js/echarts.min.js"></script>
+    <script src="./js/fjson.js"></script>
+    <script type="text/javascript">
+        jscolor.presets.default = {
+            palette: [
+                '#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26', '#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',
+                '#ffffff', '#c3c3c3', '#b87957', '#feaec9', '#ffc80d', '#eee3af', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',
+            ],
+            //paletteCols: 12,
+            hideOnPaletteClick: true,
+            closeButton: true, closeText: 'OK',
+            alphaChannel: true,
+            //width: 271,
+            //height: 151,
+            //position: 'right',
+            //previewPosition: 'right',
+            //format: ['auto', 'any', 'hex', 'hexa', 'rgb', 'rgba'],
+            //previewPosition: ['left', 'right'],
+            //mode: ['hsv', 'hvs', 'hs', 'hv'],
+            //position: ['left', 'right', 'top', 'bottom'],
+            //alphaChannel: ['auto', true, false],
+            //paletteSetsAlpha: ['auto', true, false],
+            //backgroundColor: 'rgba(51,51,51,1)', controlBorderColor: 'rgba(153,153,153,1)', buttonColor: 'rgba(240,240,240,1)',
+        }
+        function update(picker, selector)
+        {
+            let color = document.getElementById("backcolor").style.backgroundColor;
+            try
+            {
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                grid.CommandBackGroudColor(color);
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+
+            }
+
+        }
+        function update2(picker, selector)
+        {
+            let color = document.getElementById("backcolor").style.backgroundColor;
+            try
+            {
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                grid.CommandForeColor(color);
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+
+            }
+
+        }
+        function update3(picker, selector)
+        {
+            try
+            {
+                let chart = grid.GetSelectChart();
+                if (chart == null)
+                    return;
+                let domchartbackcolor = document.getElementById("chartbackcolor");
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                //let chart = grid.NewChart();
+                chart.BackColor = color;
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+                domchartbackcolor.style.backgroundColor = "";
+            } catch (e)
+            {
+
+            }
+
+        }
+    </script>
+    <div class="container-fluid">
+        <div class="btn-toolbar" role="toolbar" aria-label="...">
+            <div class="btn-group" role="group" aria-label="...">
+                <!--文件-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        文件
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="menufile" class="dropdown-menu">
+                        <li onclick="New()"><a href="#">新建(new)</a></li>
+                        <li onclick="Open()"><a href="#">打开(open)</a></li>
+                        <li onclick="ReadOnly()"><a href="#">只读(readonly)</a></li>
+                        <li onclick="UnReadOnly()"><a href="#">取消只读(readonly)</a></li>
+                        <li onclick="Save()"><a href="#">保存(save)</a></li>
+                        <li onclick="OpenDialogSize()"><a href="#">大小(size)</a></li>
+                        <li onclick="Preview()"><a href="#">预览(Preview)</a></li>
+                        <li onclick="Scale()"><a href="#">缩放(Scale)</a></li>
+                        <li onclick="Restore()"><a href="#">恢复(Restore)</a></li>
+                    </ul>
+
+                </div>
+                <!--合并-->
+                <button type="button" class="btn btn-default fa" title="合并单元格" onclick="Merge()">
+                    合并
+                </button>
+                <!--自动换行-->
+                <button type="button" class="btn btn-default fa " title="自动换行" onclick="MultLine()">
+                    换行
+                </button>
+                <!--编辑-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        编辑
+                        <span class="caret"></span>
+                    </button>
+
+                    <ul id="font" class="dropdown-menu">
+
+                        <li onclick="Copy()"><a href="#">复制</a></li>
+                        <li onclick="Paste()"><a href="#">粘贴</a></li>
+                        <li onclick="Cut()"><a href="#">剪切</a></li>
+
+                        <li onclick="PasteStyle()"><a href="#">粘贴样式</a></li>
+
+                        <li onclick="UnMerge()"><a href="#">取合并单元格</a></li>
+
+                        <li onclick="ShowGridLine(); ShowRowHeader(); ShowColumnHeader(); VScrollVisible(); HScrollVisible(); ShowBorder(); ShowSelectBorder(); LockHeader();"><a href="#">空白</a></li>
+
+                        <li onclick="ShowGridLine()"><a href="#">显示网络线</a></li>
+                        <li onclick="ShowRowHeader()"><a href="#">显示行头</a></li>
+                        <li onclick="ShowColumnHeader()"><a href="#">显示列头</a></li>
+                        <li onclick="LockHeader()" title="不显示行，列头时 占用原有位置 配合底图使用效果好"><a href="#">锁定行列头位置</a></li>
+                        <li onclick="VScrollVisible()"><a href="#">垂直滚动条</a></li>
+                        <li onclick="HScrollVisible()"><a href="#">水平滚动条</a></li>
+                        <li onclick="ShowBorder()"><a href="#">边框</a></li>
+                        <li onclick="ShowSelectBorder()"><a href="#">显示选择框</a></li>
+
+                        <li onclick="DefaultColumnWidth()" title="和新建接合使用"><a href="#">列宽20</a></li>
+
+                        <li onclick="GridBackImage()"><a href="#">背景图片</a></li>
+                        <li onclick="GridBackImageLayoutNone()"><a href="#">背景图片布局空</a></li>
+                        <li onclick="GridBackImageLayoutStretch()"><a href="#">背景图片布局-伸缩</a></li>
+                        <li onclick="GridBackImageLayoutZoom()"><a href="#">背景图片布局-放大</a></li>
+
+                        <li onclick="TestBackImage()"><a href="#">单元格背景图片</a></li>
+                        <li onclick="ImageLayoutNone()"><a href="#">单元格背景图片布局空</a></li>
+                        <li onclick="ImageLayoutStretch()"><a href="#">单元格背景图片布局-伸缩</a></li>
+                        <li onclick="ImageLayoutZoom()"><a href="#">单元格背景图片布局-放大</a></li>
+                        <li onclick="ImageLayoutClip()"><a href="#">单元格背景图片布局-原图裁切</a></li>
+                        <li onclick="ImageLayoutZoomClip()"><a href="#">单元格背景图片布局-缩放截切</a></li>
+
+                    </ul>
+                </div>
+                <!--背景色-->
+                <button type="button" class="btn btn-default fa" title="背景色">
+                    <span id="backcolor" data-jscolor="{
+			onChange: 'update(this)',
+			onInput: 'update(this)' }"
+                          style="background-color: rgba(165, 42, 42, 1); ">口</span>
+
+                </button>
+                <!--前景色-->
+                <button type="button" class="btn btn-default fa" title="前景色">
+                    <span id="backcolor" data-jscolor="{
+			onChange: 'update2(this)',
+			onInput: 'update2(this)' }" style="background-color: rgba(165, 42, 42, 1); ">A</span>
+
+                </button>
+                <!--字体-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        字体
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="font" class="dropdown-menu">
+                        <li id="font1"><a href="#">Helvetica</a></li>
+                        <li><a href="#">Arial</a></li>
+                        <li><a href="#">Lucida Grande</a></li>
+                        <li><a href="#">Verdana</a></li>
+                        <li><a href="#">Tahoma</a></li>
+                        <li><a href="#">Trebuchet MS</a></li>
+                        <li><a href="#">Georgia</a></li>
+                        <li><a href="#">Times</a></li>
+                        <li><a href="#">中易宋体</a></li>
+                        <li><a href="#">微软雅黑</a></li>
+                        <li><a href="#">华文细黑</a></li>
+                        <li><a href="#">Georgia</a></li>
+                        <li><a href="#">Impact</a></li>
+                        <li><a href="#">Verdana</a></li>
+                        <li><a href="#">宋体</a></li>
+                        <li><a href="#">黑体</a></li>
+                        <li><a href="#">Comic Sans MS</a></li>
+                        <li><a href="#">Time News Roman</a></li>
+
+                    </ul>
+                </div>
+                <!--字体大小-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        大小
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="fontsize" class="dropdown-menu">
+                        <li id="font1"><a href="#">Helvetica</a></li>
+                        <li><a href="#">12px</a></li>
+                        <li><a href="#">14px</a></li>
+                        <li><a href="#">16px</a></li>
+                        <li><a href="#">18px</a></li>
+                        <li><a href="#">20px</a></li>
+                        <li><a href="#">22px</a></li>
+                        <li><a href="#">24px</a></li>
+                        <li><a href="#">26px</a></li>
+                        <li><a href="#">28px</a></li>
+                        <li><a href="#">30px</a></li>
+                        <li><a href="#">32px</a></li>
+                        <li><a href="#">34px</a></li>
+                        <li><a href="#">36px</a></li>
+                        <li><a href="#">50px</a></li>
+                        <li><a href="#">72px</a></li>
+
+                    </ul>
+                    <button id="fontsizeadd" type="button" class="btn btn-default fa" title="+">+</button>
+                    <button id="fontsizeminus" type="button" class="btn btn-default fa" title="-">-</button>
+                </div>
+                <!--字体样式-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        样式
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="fontstyle" class="dropdown-menu">
+                        <li onclick="SetFontStyle('normal')"><a href="#">normal</a></li>
+                        <li onclick="SetFontStyle('italic')"><a href="#">italic</a></li>
+                        <li onclick="SetFontStyle('bold')"><a href="#">bold</a></li>
+                        <li onclick="SetStyleTextPadding()"><a href="#">文字内边距 TextPadding</a></li>
+                        <li onclick="SetStyleTextBorder()"><a href="#">文字内边框 TextBorder</a></li>
+                        <li onclick="SetStyleTextBackgroundColor()"><a href="#">文字内背景 TextBackgroundColor</a></li>
+                        <li onclick="SetStyleTextShadow()"><a href="#">文字阴影 TextShadow</a></li>
+                    </ul>
+                </div>
+                <!--单元格 格式-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        格式
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li title="年月日 yyyy-MM-dd"><a class="fa  " onclick="FormatDate()">年月日</a></li>
+                        <li title="时分秒 HH:mm:ss"><a class="fa  " onclick="FormatTime()">时分秒</a></li>
+                        <li title="年月日时分秒 yyyy-MM-dd  HH:mm:ss"><a class="fa  " onclick="FormatDateTime()">年月日时分秒</a></li>
+
+                        <li title="百分比"><a class="fa  " onclick="FormatPercentage()">百分比</a></li>
+                        <li title="增加小数位"><a class="fa  " onclick="FormatDecimalsAdd()">增加小数位</a></li>
+                        <li title="减少小数位"><a class="fa  " onclick="FormatDecimalsIndent()">减少小数位</a></li>
+                        <li title="两位小数"><a class="fa  " onclick="FormatDecimals2()">两位小数</a></li>
+                        <li title="一位小数"><a class="fa  " onclick="FormatDecimals1()">一位小数</a></li>
+                        <li title="三位小数"><a class="fa  " onclick="FormatDecimals3()">三位小数</a></li>
+                        <li title="清除格式"><a class="fa  " onclick="FormatClear()">三位小数</a></li>
+
+                        <li title="显示"><a class="fa  " onclick="CellVisable()">显示(单元格对用户是否可见)</a></li>
+                    </ul>
+                </div>
+                <!--单元格 边框-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        边框
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="cellborder" class="dropdown-menu">
+                        <li title="all"><a>全部</a></li>
+                        <li title="left"><a>左</a></li>
+                        <li title="right"><a>右</a></li>
+                        <li title="top"><a>上</a></li>
+                        <li title="bottom"><a>下</a></li>
+                    </ul>
+                </div>
+                <!--文字对齐-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        对齐
+                        <span class="caret"></span>
+                    </button>
+                    <ul id="textAlign" class="dropdown-menu">
+                        <li title="center" onclick="SetTextAlign('center'); SetTextVerticalAlign('middle');"><a class="fa fa-align-center">居中</a></li>
+                        <li title="left" onclick="SetTextAlign('left')"><a class="fa fa-align-left">左对齐</a></li>
+                        <li title="center" onclick="SetTextAlign('center')"><a class="fa fa-align-center">水平居中对齐</a></li>
+                        <li title="right" onclick="SetTextAlign('right')"><a class="fa fa-align-right">右对齐</a></li>
+
+                        <li title="top"><a class="fa fa-align-top" onclick="SetTextVerticalAlign('top')">上对齐</a></li>
+                        <li title="middle"><a class="fa fa-align-middle" onclick="SetTextVerticalAlign('middle')">重直居中对齐</a></li>
+                        <li title="bottom"><a class="fa fa-align-bottom" onclick="SetTextVerticalAlign('bottom')">下对齐</a></li>
+                    </ul>
+                </div>
+                <!--行列单元格-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        行列单元格
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li title="单元格只读"><a class="fa " onclick="CellReadOnly()">单元格只读</a></li>
+                        <li title="单元格取消只读"><a class="fa " onclick="CellUnReadOnly()">单元格取消只读</a></li>
+
+                        <li title="隐藏行"><a class="fa  " onclick="HideRow()">隐藏行</a></li>
+                        <li title="隐藏列"><a class="fa  " onclick="HideColumn()">隐藏列</a></li>
+                        <li title="显示行"><a class="fa  " onclick="ShowRow()">显示行</a></li>
+                        <li title="显示列"><a class="fa  " onclick="ShowColumn()">显示列</a></li>
+                        <li title="冻结行"><a class="fa  " onclick="FrozenRow()">冻结行</a></li>
+                        <li title="冻结列"><a class="fa  " onclick="FrozenColumn()">冻结列</a></li>
+                        <li title="冻结单元格"><a class="fa  " onclick="FrozenCell()">冻结单元格</a></li>
+
+                        <li title="删除行"><a class="fa  " onclick="DeleteRow()">删除行</a></li>
+                        <li title="删除列"><a class="fa  " onclick="DeleteColumn()">删除列</a></li>
+                        <li title="插入行"><a class="fa  " onclick="InsertRow()">插入行</a></li>
+                        <li title="插入列"><a class="fa  " onclick="InsertColumn()">插入列</a></li>
+                        <li title="插入单元格右移"><a class="fa " onclick="InsertCellColumn()">插入单元格右移</a></li>
+                        <li title="插入单元格下移"><a class="fa " onclick="InsertCellRow()">插入单元格下移</a></li>
+                        <li title="删除单元格左移"><a class="fa " onclick="DeleteCellColumn()">删除单元格左移</a></li>
+                        <li title="删除单元格上移"><a class="fa " onclick="DeleteCellRow()">删除单元格上移</a></li>
+                    </ul>
+                </div>
+
+                <!--背景单元格-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        背景单元格
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li title="设置背景单元格"><a class="fa" onclick="BackCellNew(); BackCellImage();">设置背景单元格</a></li>
+                        <li title="取消背景单元格"><a class="fa" onclick="BackCellCancel()">取消背景单元格</a></li>
+                        <li title="背景单元格图片"><a class="fa" onclick="BackCellImage()">背景单元格图片</a></li>
+                        <li title="背景单元格颜色"><a class="fa" onclick="BackCellColor()">背景单元格颜色</a></li>
+
+                    </ul>
+                </div>
+
+                <!--图表-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        图表(chart)
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li title="新建图表(NewChart)"><a class="fa" onclick="NewChart(); ">新建图表</a></li>
+
+                        <li title="图表样式" data-toggle="modal" data-target="#myModal" onclick="SetChartData();"><a class="fa">图表数据</a></li>
+                        <li title="图表样式" data-toggle="modal" data-target="#modalchartstyle" onclick="SetChartStyle()"><a class="fa">图表样式</a></li>
+
+                        <li title="图表背景色" data-toggle="modal">
+                            <a id="chartbackcolor" data-jscolor="{
+			onChange: 'update3(this)',
+			onInput: 'update3(this)' }">背景颜色</a>
+                        </li>
+                        <li title="图表背景图片" data-toggle="modal" onclick="ChartBackImage();"><a class="fa">图表背景图片</a></li>
+                        <li title="删除图表(ChartRemove)"><a class="fa" onclick="ChartRemove(); ">删除图表</a></li>
+                    </ul>
+                </div>
+
+                <!--图元-->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        图元(primitive)
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li title="新建图元(New)"><a class="fa" onclick="NewPrimitive(); ">新建图元</a></li>
+                        <li title="删除图元" onclick="PrimitiveRemove()"><a class="fa">删除图元</a></li>
+
+                        <li title="图元样式" data-toggle="modal" data-target="#modalchartstyle" onclick="PrimitiveStyle()"><a class="fa">图表图元</a></li>
+
+                        <li title="图元背景色" data-toggle="modal">
+                            <a id="chartbackcolor" data-jscolor="{
+			onChange: 'update3(this)',
+			onInput: 'update3(this)' }">图元背景颜色</a>
+                        </li>
+                        <li title="图元背景图片" data-toggle="modal" onclick="PrimitiveBackImage();"><a class="fa">图元背景图片</a></li>
+                        <li title="新建图元-线"><a class="fa" onclick="NewDiaplayLine(); ">新建图元-线</a></li>
+                        <li title="新建图元-矩形"><a class="fa" onclick="NewDiaplayRect(); ">新建图元-矩形</a></li>
+                        <li title="新建图元-文字"><a class="fa" onclick="NewDiaplayText(); ">新建图元-文字</a></li>
+                        <li title="新建图元-圆"><a class="fa" onclick="NewDiaplayCircle(); ">新建图元-圆</a></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+        <!-- <div id="maingrid" style="position: relative;width:1440px;height:960px; background-color:red" >
+        <div id="grid" style="position: relative;width:1440px;height:960px; background-color:aqua" > </div >
+        </div >-->
+        <div id="maingrid" style="position: static; width: 100%; height: 100%;  box-sizing: border-box ">
+            <div id="grid" style="position: relative; width: 1200px; height: 600px;  "> </div>
+        </div>
+        <div>
+            <div>
+                <span> dataexcel Version:1.0.1.11</span>
+                <a href="js/dataexcel.js"> download</a>
+                <a href="download/dataexcel.rar"> API</a>
+                <a href="download/dataexcel.rar">git demo</a>
+            </div>
+            <div>
+                合作
+                <a href="about/wechat.jpg">
+                    <img width="72" height="72" src="about/wechat.jpg" style="display:block" />
+                </a>
+            </div>
+        </div>
+        <div>
+            <!-- Button trigger modal -->
+            <!--<button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                Launch demo modal
+            </button>-->
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">图表样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="" role="search">
+                                <div class="form-group">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">数据</div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-lg-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">
+                                                            样式
+                                                        </span>
+                                                        <input type="text" class="form-control" list="test" id="test2" value='0.3' onfocus="this.value=''">
+                                                        <datalist id="test">
+                                                            <option value="0.3">0.3</option>
+                                                            <option value="0.2">0.2</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </datalist>
+                                                    </div><!-- /input-group -->
+                                                </div><!-- /.col-lg-6 -->
+                                                <div class="col-lg-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">
+                                                            数据
+                                                        </span>
+                                                        <input type="text" class="form-control" aria-label="...">
+                                                    </div><!-- /input-group -->
+                                                </div><!-- /.col-lg-6 -->
+                                            </div><!-- /.row -->
+                                        </div>
+                                    </div>
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">Panel heading without title</div>
+                                        <div class="panel-body">
+                                            <textarea class="form-control" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--chartstyle-->
+            <div class="modal fade" id="modalchartstyle" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">图表样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="txtchartstyle" class="form-control" rows="9"></textarea>
+                            <a href="https://echarts.apache.org/examples/zh/index.html" target="_blank">echarts simple 示例;</a>
+                            <a href="https://echarts.apache.org/examples/zh/editor.html?c=line-simple" target="_blank">echarts 编辑 </a>
+                            <a href="https://echarts.apache.org/zh/option.html#series-line" target="_blank">echarts option 选项</a>
+                            <a href="https://www.bejson.com/json/format/" target="_blank">json编辑器 选项</a>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="$('#modalchartstyle').modal('hide'); SaveChartStyle();">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--宽度、高度-->
+            <div caption="宽度" class="modal fade" id="modaldomwidthheight" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">表格大小</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            宽:
+                                        </span>
+                                        <input id="gridwidth" type="text" class="form-control" aria-label="...">
+                                    </div><!-- /input-group -->
+                                </div><!-- /.col-lg-6 -->
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            高:
+                                        </span>
+                                        <input id="gridheight" type="text" class="form-control" aria-label="...">
+                                    </div><!-- /input-group -->
+                                </div><!-- /.col-lg-6 -->
+                            </div><!-- /.row -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="$('#modaldomwidthheight').modal('hide'); SaveGridSize();">保存(Save)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--celltextstyle-->
+            <div class="modal fade" id="modalcelltextstyle" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">单元格扩展样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="txtchartstyle" class="form-control" rows="9">
+style = {  
+            fill: '#ffe', 
+            font: '18px Arial', 
+            padding: [10, 20, 30, 140],
+            backgroundColor: 'rgba(124, 0, 123, 0.4)',
+            borderColor: '#112233',
+            borderWidth: 2,
+            borderRadius: 5,
+            textShadowBlur: 2,
+            textShadowColor: '#893e95',
+            textShadowOffsetX: 2,
+            textShadowOffsetY: 14,
+            boxShadowBlur: 5,
+            boxShadowColor: '#ffe',
+            boxShadowOffsetX: 5,
+            boxShadowOffsetY: 10
+
+        }
+
+</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="$('#modalcelltextstyle').modal('hide'); SaveCellStyle();">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <textarea id="maininput"
+                  style="visibility:hidden; position:absolute;z-index:99;left:100px;top:100px;width:100px;"></textarea>
+        <!--<div style=" width: 100%; height: 100%; ">
+            <textarea id="file"
+                      style=" position:absolute;z-index:99;left:100px;top:100px;width:100px;"></textarea>
+        </div>-->
+    </div>
+    <!--Init-->
+    <script type="text/javascript">
+        var domgrid = document.getElementById("grid");
+        var input = document.getElementById("maininput");
+        var grid = new DataExcel();
+        grid.Width = domgrid.Width;
+        grid.Height = domgrid.Height;
+        grid.InitDom(domgrid);
+        grid.InitEdit(input);
+        grid.Refresh();
+        grid.Paint();
+        grid.On(Events.FocusedCellChanged, FocusedCellChanged);
+        function FocusedCellChanged(args)
+        {
+            console.log("事件触发测试:" + args);
+        }
+    </script>
+    <!--File-->
+    <script type="text/javascript">
+        function New()
+        {
+            grid.Clear();
+            grid.VScroll.Visible = true;
+            grid.HScroll.Visible = true;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Open()
+        {
+            let inputObj = document.createElement('input')
+            inputObj.setAttribute('id', '_ef');
+            inputObj.setAttribute('type', 'file');
+            inputObj.setAttribute("style", 'visibility:hidden');
+            document.body.appendChild(inputObj);
+            inputObj.addEventListener("change", fileopen)
+            //inputObj. = fileopen()
+            inputObj.click();
+        }
+        function fileopen(e)
+        {
+            let inputObj = e.target;
+            let file = inputObj.files[0];
+            console.log(file);
+            grid.OpenFile(file);
+
+            document.body.removeChild(inputObj);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Save()
+        {
+            //let domfile = document.getElementById("file");
+            let content = JSON.stringify(grid.GetData());
+            //domfile.innerText = content;
+            let fileName = "grid.json";
+            let downLink = document.createElement('a')
+            downLink.download = fileName
+            let blob = new Blob([content], { type: 'text/json' })
+            downLink.href = URL.createObjectURL(blob)
+            document.body.appendChild(downLink)
+            downLink.click()
+            document.body.removeChild(downLink)
+        }
+        function OpenDialogSize()
+        {
+            //let dialog = document.getElementById("modaldomwidthheight");
+            //dialog.modal({
+            //    keyboard: false
+            //});
+            let domwidth = document.getElementById("gridwidth");
+            let width = grid.Width;
+            let domheight = document.getElementById("gridheight");
+            let height = grid.Height;
+            domwidth.value = width;
+            domheight.value = height;
+            $('#modaldomwidthheight').modal({
+                keyboard: false
+            })
+        }
+        function SaveGridSize()
+        {
+            let domwidth = document.getElementById("gridwidth");
+            let width = Number(domwidth.value);
+            let domheight = document.getElementById("gridheight");
+            let height = Number(domheight.value);
+            grid.SetSize(width, height);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Preview()
+        {
+            let key = (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16);
+            let arg = "?k=" + key + "&zoom=true";
+            let content = JSON.stringify(grid.GetData());
+            localStorage.setItem(key, content);
+            window.open("demo.html" + arg);
+
+        }
+        function Scale()
+        {
+            var zw = 0.7;
+            var zh = 0.7;
+            document.body.style.transformOrigin = '0 0';
+            document.body.style.transform = 'scale(' + zw + ',' + zh + ')';
+            document.body.style.width = window.innerWidth / zw + 'px';
+            document.body.style.height = window.innerHeight / zh + 'px';
+            grid.SetSize(grid.Width, grid.Height);
+            grid.Refresh();
+            grid.Paint();
+        }
+        function Restore()
+        {
+            var zw = 1;
+            var zh = 1;
+            document.body.style.transformOrigin = '0 0';
+            document.body.style.transform = 'scale(' + zw + ',' + zh + ')';
+            document.body.style.width = window.innerWidth / zw + 'px';
+            document.body.style.height = window.innerHeight / zh + 'px';
+            grid.SetSize(grid.Width, grid.Height);
+            grid.Refresh();
+            grid.Paint();
+        }
+
+        function ReadOnly()
+        {
+            grid.ReadOnly = CheckState.Check;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function UnReadOnly()
+        {
+            grid.ReadOnly = CheckState.UnCheck;
+            grid.Refresh();
+            grid.RePaint();
+        }
+    </script>
+    <!--Font-->
+    <script type="text/javascript">
+        let domfont = document.getElementById("font");
+        bingdingclikc();
+        function bingdingclikc()
+        {
+            let ch = domfont.children;
+            for (var i = 0; i < ch.length; i++)
+            {
+                ch[i].addEventListener("click", SetFont);
+            }
+        }
+
+        function SetFont(e)
+        {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontName(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        let domfontsize = document.getElementById("fontsize");
+        domfontsizebingdingclikc();
+        function domfontsizebingdingclikc()
+        {
+            let ch = domfontsize.children;
+            for (var i = 0; i < ch.length; i++)
+            {
+                ch[i].addEventListener("click", SetFontSize);
+            }
+        }
+
+        function SetFontSize(e)
+        {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontSize(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        let domfontsizeadd = document.getElementById("fontsizeadd");
+        domfontsizeadd.addEventListener("click", SetFontSizeAdd);
+        function SetFontSizeAdd(e)
+        {
+            grid.CommandFontSizeAdd(1);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        let domfontsizeminus = document.getElementById("fontsizeminus");
+        domfontsizeminus.addEventListener("click", SetFontSizeMinus);
+        function SetFontSizeMinus(e)
+        {
+            grid.CommandFontSizeAdd(-1);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        //let domfontstyle = document.getElementById("fontstyle");
+        //domfontstylebingdingclikc();
+        //function domfontstylebingdingclikc()
+        //{
+        //    let ch = domfontstyle.children;
+        //    for (var i = 0; i < ch.length; i++)
+        //    {
+        //        ch[i].addEventListener("click", SetFontStyle);
+        //    }
+        //}
+
+        function SetFontStyle(e)
+        {
+            let fontname = e;
+            grid.CommandFontStyle(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetFontWeight(e)
+        {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontWeight(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function SetStyleTextPadding(e)
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                let padding = cell.Style.padding;
+                if (padding == null)
+                {
+                    padding = [10, 10, 10, 10];
+                    cell.Style.padding = padding;
+                }
+                else
+                {
+                    cell.Style.padding = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextBorder(e)
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                let borderColor = cell.Style.borderColor;
+                let borderWidth = cell.Style.borderWidth;
+                let borderRadius = cell.Style.borderRadius;
+                if (borderColor == null)
+                {
+                    borderColor = "#2D88E280";
+                    borderWidth = 2;
+                    borderRadius = 5;
+                    cell.Style.borderColor = borderColor;
+                    cell.Style.borderWidth = borderWidth;
+                    cell.Style.borderRadius = borderRadius;
+                }
+                else
+                {
+                    cell.Style.borderColor = null;
+                    cell.Style.borderWidth = null;
+                    cell.Style.borderRadius = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextBackgroundColor(e)
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                let backgroundColor = cell.Style.backgroundColor;
+                if (backgroundColor == null)
+                {
+                    backgroundColor = "#3194F6C9";
+                    cell.Style.backgroundColor = backgroundColor;
+                }
+                else
+                {
+                    cell.Style.backgroundColor = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextShadow(e)
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                let textShadowBlur = cell.Style.textShadowBlur;
+                let textShadowColor = cell.Style.textShadowColor;
+                let textShadowOffsetX = cell.Style.textShadowOffsetX;
+                let textShadowOffsetY = cell.Style.textShadowOffsetY;
+                if (textShadowBlur == null)
+                {
+                    textShadowBlur = 2;
+                    textShadowColor = '#893e95';
+                    textShadowOffsetX = 2;
+                    textShadowOffsetY = 4;
+                    cell.Style.textShadowBlur = textShadowBlur;
+                    cell.Style.textShadowColor = textShadowColor;
+                    cell.Style.textShadowOffsetX = textShadowOffsetX;
+                    cell.Style.textShadowOffsetY = textShadowOffsetY;
+                }
+                else
+                {
+                    cell.Style.textShadowBlur = null;
+                    cell.Style.textShadowColor = null;
+                    cell.Style.textShadowOffsetX = null;
+                    cell.Style.textShadowOffsetY = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SaveCellStyle()
+        {
+
+        }
+    </script>
+
+    <!--Border-->
+    <script type="text/javascript">
+        let domcellborder = document.getElementById("cellborder");
+        domcellborderbingdingclikc();
+        function domcellborderbingdingclikc()
+        {
+            let ch = domcellborder.children;
+            for (var i = 0; i < ch.length; i++)
+            {
+                ch[i].addEventListener("click", SetCellBorder);
+            }
+        }
+
+        function SetCellBorder(e)
+        {
+            let fontname = e.currentTarget.title;
+            grid.CommandCellBorder(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowGridLine()
+        {
+            grid.ShowGridLine = !grid.ShowGridLine;
+            grid.Refresh();
+            grid.RePaint();
+        }
+    </script>
+
+    <!--Align-->
+    <script type="text/javascript">
+
+        function SetTextAlign(e)
+        {
+            let item = e;//.currentTarget.title;
+            grid.CommandTextAlign(item);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetTextVerticalAlign(e)
+        {
+            let item = e;//.currentTarget.title;
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                cell.Style.verticalAlign = item;
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+    </script>
+
+    <!--Cell Row Column-->
+    <script type="text/javascript">
+        function HideRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++)
+                    {
+                        let row = grid.GetRow(i);
+                        row.Visible = false;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function HideColumn()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinColumn();
+                    let max = grid.SelectCells.MaxColumn();
+                    for (var i = min; i <= max; i++)
+                    {
+                        let column = grid.GetColumn(i);
+                        column.Visible = false;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function ShowRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++)
+                    {
+                        let row = grid.GetRow(i);
+                        row.Visible = true;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function ShowColumn()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinColumn();
+                    let max = grid.SelectCells.MaxColumn();
+                    for (var i = min; i <= max; i++)
+                    {
+                        let column = grid.GetColumn(i);
+                        column.Visible = true;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FrozenRow()
+        {
+            try
+            {
+                if (grid.FocusedCell != null)
+                {
+                    grid.FrozenRow = grid.FocusedCell.Row.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FrozenColumn()
+        {
+            try
+            {
+                if (grid.FocusedCell != null)
+                {
+                    grid.FrozenColumn = grid.FocusedCell.Column.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FrozenCell()
+        {
+            try
+            {
+                if (grid.FocusedCell != null)
+                {
+                    grid.FrozenColumn = grid.FocusedCell.Column.Index;
+                    grid.FrozenRow = grid.FocusedCell.Row.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function InsertRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++)
+                    {
+                        grid.InsertRow(i);
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function InsertColumn()
+        {
+            if (grid.SelectCells != null)
+            {
+                let min = grid.SelectCells.MinColumn();
+                let max = grid.SelectCells.MaxColumn();
+                for (var i = min; i <= max; i++)
+                {
+                    grid.InsertColumn(i);
+                }
+
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function DeleteRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++)
+                    {
+                        grid.DeleteRow(i);
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+
+        }
+        function DeleteColumn()
+        {
+            if (grid.SelectCells != null)
+            {
+                let min = grid.SelectCells.MinColumn();
+                let max = grid.SelectCells.MaxColumn();
+                for (var i = min; i <= max; i++)
+                {
+                    grid.DeleteColumn(i);
+                }
+
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function DeleteCellRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    grid.DeleteCellRow(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+
+        }
+        function InsertCellRow()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    grid.InsertCellRow(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+
+        }
+        function DeleteCellColumn()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    grid.DeleteCellColumn(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+
+        }
+        function InsertCellColumn()
+        {
+            try
+            {
+                if (grid.SelectCells != null)
+                {
+                    grid.InsertCellColumn(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+
+
+        }
+        function Merge()
+        {
+            if (grid.SelectCells != null)
+            {
+                let mergecell = grid.Merge(grid.SelectCells);
+                console.log(mergecell);
+                grid.FocusedCell = mergecell;
+                grid.SetSelectCells(mergecell.BeginCell, mergecell.EndCell);
+                console.log(grid.SelectCells);
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function UnMerge()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.UnMerge(grid.SelectCells);
+                grid.RePaint();
+            }
+
+        }
+        function Paste()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.Paste();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function PasteStyle()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.PasteStyle();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function Copy()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.Copy();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+
+        function Cut()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.Copy();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function MultLine()
+        {
+            let list = grid.GetSelectCells();
+            for (let i in list)
+            {
+                let cell = list[i];
+                cell.AutoMultiline = !cell.AutoMultiline;
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowRowHeader()
+        {
+            grid.ShowRowHeader = !grid.ShowRowHeader;
+            if (grid.Charts != null)
+            {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function ShowColumnHeader()
+        {
+            grid.ShowColumnHeader = !grid.ShowColumnHeader;
+            if (grid.Charts != null)
+            {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function LockHeader()
+        {
+            //grid.LockColumnHeader = !grid.LockColumnHeader;
+            //grid.LockRowHeader = !grid.LockRowHeader;
+            if (grid.Charts != null)
+            {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function VScrollVisible()
+        {
+            grid.VScroll.Visible = !grid.VScroll.Visible;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function HScrollVisible()
+        {
+            grid.HScroll.Visible = !grid.HScroll.Visible;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowBorder()
+        {
+            grid.ShowBorder = !grid.ShowBorder;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowSelectBorder()
+        {
+            grid.ShowSelectBorder = !grid.ShowSelectBorder;
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function DefaultColumnWidth()
+        {
+            grid.DefaultColumnWidth = 20;
+
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function TestBackImage()
+        {
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.FocusedCell.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImage()
+        {
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutNone()
+        {
+            grid.BackImageImageLayout = ImageLayout.None;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutClip()
+        {
+            grid.BackImageImageLayout = ImageLayout.Clip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutStretch()
+        {
+            grid.BackImageImageLayout = ImageLayout.Stretch;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutZoom()
+        {
+            grid.BackImageImageLayout = ImageLayout.Zoom;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutZoomClip()
+        {
+            grid.BackImageImageLayout = ImageLayout.ZoomClip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        ///
+
+        function ImageLayoutNone()
+        {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.None;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutClip()
+        {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Clip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutStretch()
+        {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Stretch;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutZoom()
+        {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Zoom;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutZoomClip()
+        {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.ZoomClip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        /*      <img src="../Image/test/96434.png" />*/
+    </script>
+
+    <!--Format-->
+    <script type="text/javascript">
+        function CellReadOnly()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.ReadOnly = CheckState.Check;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function CellUnReadOnly()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.ReadOnly = CheckState.UnCheck;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDate()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "yyyy-MM-dd";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatTime()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "HH:mm:ss";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDateTime()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "yyyy-MM-dd HH:mm:ss";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatMoney()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "¥";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatPercentage()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "00%";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDecimalsAdd()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatDecimalsAdd();
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDecimalsIndent()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatDecimalsIndent();
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDecimals3()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "000";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDecimals2()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "00";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+        function FormatDecimals1()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "0";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+
+
+        function CellVisable()
+        {
+            try
+            {
+                let list = grid.GetSelectCells();
+                for (let i in list)
+                {
+                    let cell = list[i];
+                    cell.Visible = !cell.Visible;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e)
+            {
+                console.log(e);
+            }
+        }
+
+    </script>
+
+    <!--BackCell-->
+    <script type="text/javascript">
+
+        function BackCellNew()
+        {
+            if (grid.SelectCells != null)
+            {
+                let mergecell = grid.BackCell(grid.SelectCells);
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function BackCellCancel()
+        {
+            if (grid.SelectCells != null)
+            {
+                grid.UnMerge(grid.SelectCells);
+                grid.RePaint();
+            }
+        }
+        function BackCellImage()
+        {
+            if (grid.FocusedCell == null)
+                return;
+            if (grid.FocusedCell.OwnBackCell == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.FocusedCell.OwnBackCell.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+    </script>
+    <!--char-->
+    <script type="text/javascript">
+
+        function NewChart()
+        {
+            if (grid.SelectCells != null)
+            {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function SetChartStyle()
+        {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            dom.value = JSON.stringify(chart.ChartData.style.option);
+
+        }
+        function SaveChartStyle()
+        {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            try
+            {
+                chart.ChartData.style.option = JSON.parse(dom.value);
+            } catch (e)
+            {
+                chart.ChartData.style.option = FJsonParse.Parese(dom.value)
+            }
+            chart.Refresh();
+        }
+        function ChartBackImage()
+        {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            chart.BackImage = code;
+            grid.RePaint();
+        }
+        function ChartRemove()
+        {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            chart.Clear();
+            grid.Charts.remove(chart);
+            grid.RePaint();
+        }
+    </script>
+
+    <!--primitive-->
+    <script type="text/javascript">
+
+        function NewPrimitive()
+        {
+            if (grid.SelectCells != null)
+            {
+                let chart = grid.NewPrimitive();
+                grid.ClearSelect();
+                chart.Selected = true;
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function PrimitiveStyle()
+        {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            dom.value = JSON.stringify(chart.ChartData.style.option);
+
+        }
+        function PrimitiveStyle()
+        {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            chart.ChartData.style.option = JSON.parse(dom.value);
+            chart.Refresh();
+        }
+        function PrimitiveBackImage()
+        {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            chart.BackImage = code;
+            grid.RePaint();
+        }
+
+        function NewDiaplayLine()
+        {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            item.NewDiaplayLine();
+        }
+        function NewDiaplayRect()
+        {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            item.NewDiaplayRect();
+        }
+
+        function NewDiaplayText()
+        {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDiaplayText();
+            dis.Text = "设置标题内容双击";
+        }
+        function NewDiaplayCircle()
+        {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDiaplayCircle();
+        }
+        function PrimitiveRemove()
+        {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            chart.Clear();
+            grid.Primitives.remove(chart);
+            grid.RePaint();
+        }
+    </script>
+</body>
+</html>
