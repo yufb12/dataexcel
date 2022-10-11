@@ -1823,86 +1823,71 @@ class Graphics {
         this.zr.add(group);
     }
     DrawPolyline(style, showanimate) {
-        //let style = {
-        //    option: {
-        //        style: {},
-        //        shape: {},
-        //    },
-        //    animate: [{
-        //        type: "",
-        //        interval: 1000,
-        //        value: {
-        //        }]
-        //    }
-        //};
-        let polyline = new zrender.Polyline({
+        let display = new zrender.Polyline({
             style: style.option.style,
             shape: style.option.shape,
         });
         if (showanimate) {
             if (style.animate != null) {
-                for (var i = 0; i < style.animate.length; i++) {
-                    let animate = style.animate[i];
-                    polyline.animate(animate.type, true)
-                        .when(animate.interval, animate.value)
-                        .start();
-                }
+                this.AppendAnimate(display, style.animate);
             }
         }
-        this.zr.add(polyline);
+        this.zr.add(display);
     }
     DrawPrimitiveRect(style, showanimate) {
-        let rect = new zrender.Rect({
+        let display = new zrender.Rect({
             style: style.option.style,
             shape: style.option.shape,
         });
         if (showanimate) {
             if (style.animate != null) {
-                for (var i = 0; i < style.animate.length; i++) {
-                    let animate = style.animate[i];
-                    rect.animate(animate.type, true)
-                        .when(animate.interval, animate.value)
-                        .start();
-                }
+                this.AppendAnimate(display, style.animate);
             }
         }
-        this.zr.add(rect);
+        this.zr.add(display);
     }
     DrawPrimitiveCircle(style, showanimate) {
-        let rect = new zrender.Circle({
+        let display = new zrender.Circle({
             style: style.option.style,
-            shape: style.option.shape,
-            position: style.option.position
+            shape: style.option.shape
         });
         if (showanimate) {
             if (style.animate != null) {
-                for (var i = 0; i < style.animate.length; i++) {
-                    let animate = style.animate[i];
-                    rect.animate(animate.type, true)
-                        .when(animate.interval, animate.value)
-                        .start();
-                }
+                this.AppendAnimate(display, style.animate);
             }
         }
-        this.zr.add(rect);
+        this.zr.add(display);
     }
     DrawPrimitiveText(style, showanimate) {
-        let rect = new zrender.Text({
+        let display = new zrender.Text({
             style: style.option.style,
             rotation: style.option.rotation,
             position: style.option.position
         });
         if (showanimate) {
             if (style.animate != null) {
-                for (var i = 0; i < style.animate.length; i++) {
-                    let animate = style.animate[i];
-                    rect.animate(animate.type, true)
-                        .when(animate.interval, animate.value)
-                        .start();
-                }
+                this.AppendAnimate(display, style.animate);
             }
         }
-        this.zr.add(rect);
+        this.zr.add(display);
+    }
+    AppendAnimate(display, animatees) {
+        if (animatees != null) {
+            for (var i = 0; i < animatees.length; i++) {
+                let animate = animatees[i];
+                let ani = display.animate(animate.type, true);
+                let wh = ani.when(animate.interval, animate.value);
+                wh = this.AppendWhen(wh, animate.animate);
+                wh.start();
+            }
+        }
+    }
+    AppendWhen(wh, animate) {
+        wh = wh.when(animate.interval, animate.value);
+        if (animate.animate != null) {
+            wh = this.AppendWhen(wh, animate.animate);
+        }
+        return wh;
     }
     Clip(x, y, width, height) {
         //this.Ctx.rect(x, y, width, height);
@@ -2061,6 +2046,7 @@ class DataExcelCellColumnHeader extends DataExcelCellEditBase {
         this.OnDrawText(g);
         let rect = new Rect(this.Cell.Right - HeaderSplit.ColumnHeaderSplit, this.Cell.Top, HeaderSplit.ColumnHeaderSplit, this.Cell.Height);
         g.FillRectangleColor(backcolor, rect, Cursors.col_resize, 0.01);
+        cell.OnDrawGridLine(this, g);
         return true;
     }
     OnDrawText(g) {
@@ -2102,13 +2088,13 @@ class DataExcelCellColumnHeader extends DataExcelCellEditBase {
             }
         }
         if (result) {
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
         }
         return result;
     }
     OnMouseUp(sender, e, ve) {
         this.SelectMode = SelectMode.Null;
-        ve.CellEvent = null;
+        ve.CurrentEvent = null;
         return false;
     }
     OnMouseMove(sender, e, ve) {
@@ -2143,13 +2129,13 @@ class DataExcelCellColumnHeader extends DataExcelCellEditBase {
         let result = false;
         if (e.touches.length == 1) {
             this.donwtime = new Date();
-            let point = new Point(ve.Point.X, ve.Point.Y);
+            let point = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
             this.SelectMode = SelectMode.ColumnHeaderSplitSelected;
             this.sizechangrect = new SizeChangRect();
             this.sizechangrect.MouseDownPoint = point;
             this.sizechangrect.Size = new Size(this.Cell.Width, this.Cell.Height);
             result = true;
-            ve.EventCtrol = this;
+            ve.CurrentEvent = this;
         }
         return result;
     }
@@ -2159,7 +2145,7 @@ class DataExcelCellColumnHeader extends DataExcelCellEditBase {
             let touche = e.touches[0];
             let time = new Date();
             let sec = (time.getTime() - this.donwtime.getTime()) / 1000;
-            let point = new Point(ve.Point.X, ve.Point.Y);
+            let point = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
             let d = Math.abs(this.sizechangrect.MouseDownPoint.X - point.X);
             let w = this.sizechangrect.GetChangedWidth(point);
             if ((d / sec) < 60) {
@@ -2277,6 +2263,7 @@ class DataExcelCellRowHeader extends DataExcelCellEditBase {
         this.OnDrawText(g);
         let rect = new Rect(cell.Left, cell.Bottom - HeaderSplit.RowHeaderSplit, cell.Width, HeaderSplit.RowHeaderSplit);
         g.FillRectangleColor(backcolor, rect, Cursors.row_resize, 0.01);
+        cell.OnDrawGridLine(this, g);
         return true;
     }
     OnDrawText(g) {
@@ -2307,13 +2294,13 @@ class DataExcelCellRowHeader extends DataExcelCellEditBase {
             }
         }
         if (result) {
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
         }
         return result;
     }
     OnMouseUp(sender, e, ve) {
         this.SelectMode = SelectMode.Null;
-        ve.CellEvent = null;
+        ve.CurrentEvent = null;
         return false;
     }
     OnMouseMove(sender, e, ve) {
@@ -2334,7 +2321,7 @@ class DataExcelCellRowHeader extends DataExcelCellEditBase {
             }
         }
         if (result) {
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
         }
         return result;
     }
@@ -2348,13 +2335,13 @@ class DataExcelCellRowHeader extends DataExcelCellEditBase {
         let result = false;
         if (e.touches.length == 1) {
             this.donwtime = new Date();
-            let point = new Point(ve.Point.X, ve.Point.Y);
+            let point = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
             this.SelectMode = SelectMode.RowHeaderSplitSelected;
             this.sizechangrect = new SizeChangRect();
             this.sizechangrect.MouseDownPoint = point;
             this.sizechangrect.Size = new Size(this.Cell.Width, this.Cell.Height);
             result = true;
-            ve.EventCtrol = this;
+            ve.CurrentEvent = this;
         }
         return result;
     }
@@ -2364,7 +2351,7 @@ class DataExcelCellRowHeader extends DataExcelCellEditBase {
             let touche = e.touches[0];
             let time = new Date();
             let sec = (time.getTime() - this.donwtime.getTime()) / 1000;
-            let point = new Point(ve.Point.X, ve.Point.Y);
+            let point = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
             let d = Math.abs(this.sizechangrect.MouseDownPoint.Y - point.Y);
             if ((d / sec) < 60) {
                 let h = this.sizechangrect.GetChangedHeight(point);
@@ -2524,10 +2511,10 @@ class DataExcel {
     set BorderColor(value) {
         this._BorderColor = value;
     }
-    get CellEvent() {
+    get CurrentEvent() {
         return this._CellEvent;
     }
-    set CellEvent(value) {
+    set CurrentEvent(value) {
         //if (value == null)
         //{
         //    console.log(" set CellEvent " + new Date().toLocaleTimeString());
@@ -2885,7 +2872,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnMouseDoubleClick(this, evt, null);
         }
         catch (ex) {
@@ -2951,7 +2938,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnMouseDown(this, evt, ev);
         }
         catch (ex) {
@@ -2962,7 +2949,7 @@ class DataExcel {
         if (ev.NeedRePaint) {
             obj.RePaint();
         }
-        obj.CellEvent = ev.CellEvent;
+        obj.CurrentEvent = ev.CurrentEvent;
     }
     OnMouseUp(evt) {
         this.debugmode = false;
@@ -2988,7 +2975,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnMouseUp(this, evt, ev);
             obj.Selectmode = SelectMode.Null;
         }
@@ -3026,13 +3013,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
-            //let pt1 = new Point(evt.pageX, evt.pageY);
-            //let pt2 = new Point(x + offsetleft, y + offsettop);
-            //let pt3 = new Point(x, y);
-            //DataExcelConsole.log("OnMouseMove evt", evt);     
-            //obj.DebugText = "OnMouseMove Base page" + JSON.stringify(pt1) + " offset pt2" + JSON.stringify(pt2) + "";
-            //obj.DebugText2 = "OnMouseMove Base offset" + JSON.stringify(ev.Point) + "";
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnMouseMove(this, evt, ev);
         }
         catch (ex) {
@@ -3097,15 +3078,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
-            //ev.Canvas = evt.target;
-            //let dom = evt.target as HTMLElement;
-            //ev.Dom = dom;
-            //let vertex = dom.getBoundingClientRect();
-            //let touch = evt.targetTouches[0];
-            //let x = touch.clientX - vertex.left;
-            //let y = touch.clientY - vertex.top;
-            //ev.Point = new Point(x, y);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnTouchStart(this, evt, ev);
         }
         catch (ex) {
@@ -3116,7 +3089,7 @@ class DataExcel {
         if (ev.NeedRePaint) {
             obj.RePaint();
         }
-        obj.CellEvent = ev.EventCtrol;
+        obj.CurrentEvent = ev.CurrentEvent;
     }
     OnTouchMove(evt) {
         let obj = this["Grid"];
@@ -3140,15 +3113,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
-            //ev.Canvas = evt.target;
-            //let dom = evt.target as HTMLElement;
-            //ev.Dom = dom;
-            //let vertex = dom.getBoundingClientRect();
-            //let touch = evt.targetTouches[0];
-            //let x = touch.clientX - vertex.left;
-            //let y = touch.clientY - vertex.top;
-            //ev.Point = new Point(x, y);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnTouchMove(this, evt, ev);
         }
         catch (ex) {
@@ -3184,7 +3149,7 @@ class DataExcel {
                 offsetleft = offsetleft + domt.offsetLeft;
                 offsettop = offsettop + domt.offsetTop;
             }
-            ev.Point = new Point(x + offsetleft, y + offsettop);
+            ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
             obj.DoOnTouchEnd(this, evt, ev);
         }
         catch (ex) {
@@ -3225,16 +3190,10 @@ class DataExcel {
         this.OnDraw(this.graphic);
     }
     OnDraw(g) {
-        //for (var i = 0; i < 2000; i = i + 20)
-        //{
-        //    for (var j = 0; j < 2000; j = j + 70)
-        //    {
-        //        g.DrawText("10px 宋体", "red", "I:" + i + " J:" + j + "", j, i);
-        //    }
-        //}
         g.AddDrawTimes();
         this._EndReFresh = 0;
         this._BeginReFresh = 0;
+        this.OnDrawGridLine(g);
         this.OnDrawBack(g);
         this.OnDrawColumn(g);
         this.OnDrawBackCell(g);
@@ -3245,7 +3204,6 @@ class DataExcel {
         this.OnDrawPrimitives(g);
         this.OnDrawRowHeader(g);
         this.OnDrawColumnHeader(g);
-        this.OnDrawGridLine(g);
         this.OnDrawBorder(g);
         this.OnDrawListExtendCells(g);
         this.OnDrawSelectCells(g);
@@ -3313,21 +3271,17 @@ class DataExcel {
             var rhcount = this.AllVisibleRows.Count;
             var chcount = this.AllVisibleColumns.Count;
             for (var i = 0; i < rhcount; i++) {
-                var rh = this.AllVisibleRows.Get(i);
+                var row = this.AllVisibleRows.Get(i);
                 for (var j = 0; j < chcount; j++) {
-                    var ch = this.AllVisibleColumns.Get(j);
-                    var cell = rh.Cells.Get(ch);
-                    if (cell != null) {
-                        cell.OnDrawGridLine(this, g);
+                    var column = this.AllVisibleColumns.Get(j);
+                    var cell = row.Cells.Get(column);
+                    if (cell == null) {
+                        cell = this.NewCell(row, column);
                     }
+                    cell.OnDrawGridLine(this, g);
                 }
             }
         }
-        else {
-            this.OnHeaderGridLine(g);
-        }
-    }
-    OnHeaderGridLine(g) {
     }
     OnDrawBorder(g) {
         var rhcount = this.AllVisibleRows.Count;
@@ -3488,12 +3442,11 @@ class DataExcel {
     }
     NewCell(row, column) {
         let cell = new DataExcelCell();
+        cell.Grid = this;
         cell.Row = row;
         cell.Column = column;
-        cell.Grid = this;
         row.Cells.Add(cell);
         cell.OwnEditControl = DefaultEdit.GetDefauleEdit(cell);
-        //cell.Text = "Row:" + row.Index + " Column:" + column.Index;
         return cell;
     }
     NewMergeCell(grid, selectcells) {
@@ -4044,12 +3997,7 @@ class DataExcel {
         }
         var cell = row.Cells.Get(column);
         if (cell == null) {
-            cell = new DataExcelCell();
-            cell.Row = row;
-            cell.Column = column;
-            cell.Grid = this;
-            row.Cells.Add(cell);
-            cell.OwnEditControl = DefaultEdit.GetDefauleEdit(cell);
+            cell = this.NewCell(row, column);
         }
         return cell;
     }
@@ -4178,7 +4126,12 @@ class DataExcel {
     //ONEVENT
     ClearSelect() {
         this.Charts.forEach((chart) => { chart.Selected = false; });
-        this.Primitives.forEach((chart) => { chart.Selected = false; });
+        this.Primitives.forEach((chart) => {
+            chart.Selected = false;
+            chart.Displayables.forEach((disp) => {
+                disp.Selected = false;
+            });
+        });
         //  var cs = this.GetSelectCells();
         //foreach(ICell cell in cs)
         //{
@@ -4225,7 +4178,7 @@ class DataExcel {
                 this.Refresh();
                 this.RePaint();
                 ve.NeedRePaint = true;
-                ve.CellEvent = this.VScroll;
+                ve.CurrentEvent = this.VScroll;
                 return res;
             }
         }
@@ -4236,7 +4189,7 @@ class DataExcel {
                 this.Refresh();
                 this.RePaint();
                 ve.NeedRePaint = true;
-                ve.CellEvent = this.HScroll;
+                ve.CurrentEvent = this.HScroll;
                 return res;
             }
         }
@@ -4336,7 +4289,7 @@ class DataExcel {
             this.SetFocusedCell(cell);
             e.stopPropagation();
             ve.NeedRePaint = true;
-            ve.CellEvent = cell;
+            ve.CurrentEvent = cell;
             //this.MouseDownCell = cell;
             //this.AddFocsedCellMark(cell);
             //if (this.FocusedCell != null)
@@ -4356,8 +4309,8 @@ class DataExcel {
     }
     //DO event
     DoOnMouseUp(sender, e, ve) {
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnMouseUp(this, e, ve)) {
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnMouseUp(this, e, ve)) {
                 return;
             }
         }
@@ -4393,8 +4346,8 @@ class DataExcel {
     }
     DoOnMouseDown(sender, e, ve) {
         try {
-            if (this.CellEvent != null) {
-                if (this.CellEvent.OnMouseDown(this, e, ve)) {
+            if (this.CurrentEvent != null) {
+                if (this.CurrentEvent.OnMouseDown(this, e, ve)) {
                     return true;
                 }
             }
@@ -4463,9 +4416,9 @@ class DataExcel {
         return false;
     }
     DoOnMouseMove(sender, e, ve) {
-        this.DebugRect = new Rect(ve.Point.X, ve.Point.Y, 4, 4);
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnMouseMove(this, e, ve)) {
+        this.DebugRect = new Rect(ve.offsetPoint.X, ve.offsetPoint.Y, 4, 4);
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnMouseMove(this, e, ve)) {
                 return true;
             }
         }
@@ -4564,22 +4517,22 @@ class DataExcel {
     DoOnWheel(evt) {
     }
     DoOnMouseDoubleClick(sender, e, ve) {
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnMouseDoubleClick(this, e, ve)) {
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnMouseDoubleClick(this, e, ve)) {
                 return;
             }
         }
     }
     DoOnKeyPress(sender, e, ve) {
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnKeyPress(this, e, ve)) {
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnKeyPress(this, e, ve)) {
                 return;
             }
         }
     }
     DoOnKeyDown(sender, e, ve) {
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnKeyDown(this, e, ve)) {
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnKeyDown(this, e, ve)) {
                 return;
             }
         }
@@ -4592,7 +4545,7 @@ class DataExcel {
                     else {
                         this.MoveFocusedCellToRightCell();
                     }
-                    ve.CellEvent = this.FocusedCell;
+                    ve.CurrentEvent = this.FocusedCell;
                     this.Refresh();
                     this.RePaint();
                     break;
@@ -4603,7 +4556,7 @@ class DataExcel {
                     else {
                         this.MoveFocusedCellToLeftCell();
                     }
-                    ve.CellEvent = this.FocusedCell;
+                    ve.CurrentEvent = this.FocusedCell;
                     this.Refresh();
                     this.RePaint();
                     break;
@@ -4614,7 +4567,7 @@ class DataExcel {
                     else {
                         this.MoveFocusedCellToUpCell();
                     }
-                    ve.CellEvent = this.FocusedCell;
+                    ve.CurrentEvent = this.FocusedCell;
                     this.Refresh();
                     this.RePaint();
                     break;
@@ -4625,7 +4578,7 @@ class DataExcel {
                     else {
                         this.MoveFocusedCellToDownCell();
                     }
-                    ve.CellEvent = this.FocusedCell;
+                    ve.CurrentEvent = this.FocusedCell;
                     this.Refresh();
                     this.RePaint();
                     break;
@@ -4637,9 +4590,9 @@ class DataExcel {
         this.SetCellTouchStart(sender, e, ve);
     }
     DoOnTouchMove(sender, e, ve) {
-        this.DebugRect = new Rect(ve.Point.X, ve.Point.Y, 4, 4);
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnTouchMove(this, e, ve)) {
+        this.DebugRect = new Rect(ve.offsetPoint.X, ve.offsetPoint.Y, 4, 4);
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnTouchMove(this, e, ve)) {
                 return true;
             }
         }
@@ -4676,8 +4629,8 @@ class DataExcel {
         }
     }
     DoOnTouchEnd(sender, e, ve) {
-        if (this.CellEvent != null) {
-            if (this.CellEvent.OnTouchEnd(this, e, ve)) {
+        if (this.CurrentEvent != null) {
+            if (this.CurrentEvent.OnTouchEnd(this, e, ve)) {
                 return true;
             }
         }
@@ -4790,7 +4743,7 @@ class DataExcel {
     SetCellTouchStart(sender, e, ve) {
         this.touchdowntime = new Date();
         let touch = e.touches[0];
-        let point = new Point(ve.Point.X, ve.Point.Y);
+        let point = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
         this.DebugRect = new Rect(point.X, point.Y, 4, 4);
         let viewloaction = this.PointControlToView(point);
         let pt = viewloaction;
@@ -4828,13 +4781,13 @@ class DataExcel {
         this.SetFocusedCell(cell);
         e.stopPropagation();
         ve.NeedRePaint = true;
-        ve.CellEvent = cell;
+        ve.CurrentEvent = cell;
         ve.NeedRePaint = true;
         this.EndReFresh();
         return true;
     }
     FirstShowTouchMove(e, ve) {
-        let pt = new Point(ve.Point.X, ve.Point.Y);
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
         let w = this.touchdownpoint.X - pt.X;
         let h = this.touchdownpoint.Y - pt.Y;
         DataExcelConsole.log("touchdownpoint", this.touchdownpoint);
@@ -4883,7 +4836,7 @@ class DataExcel {
         return false;
     }
     SelectModeNullTouchMove(e, ve) {
-        let pt = new Point(ve.Point.X, ve.Point.Y);
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
         let viewlocation = this.PointControlToView(pt);
         let cell = this.GetCellByPoint(pt);
         if (cell != null) {
@@ -5330,8 +5283,8 @@ class DataExcel {
     }
     SelectModeCellSeletedMouseMove(ve) {
         let pt = new Point();
-        pt.X = ve.Point.X;
-        pt.Y = ve.Point.Y;
+        pt.X = ve.offsetPoint.X;
+        pt.Y = ve.offsetPoint.Y;
         let viewloaction = this.PointControlToView(pt);
         let location = viewloaction;
         if (this.SelectCells != null) {
@@ -5538,6 +5491,8 @@ class DataExcel {
         return location;
     }
     GetOwnCell(cell) {
+        if (cell == null)
+            return null;
         if (cell.OwnMergeCell != null)
             return cell.OwnMergeCell;
         return cell;
@@ -5773,13 +5728,17 @@ class DataExcel {
                 case Border.all:
                     let leftcell = this.GetLeftCell(cell);
                     leftcell = this.GetOwnCell(leftcell);
-                    if (leftcell.RightLineStyle == null) {
-                        cell.LeftLineStyle = style;
+                    if (leftcell != null) {
+                        if (leftcell.RightLineStyle == null) {
+                            cell.LeftLineStyle = style;
+                        }
                     }
                     let topcell = this.GetTopCell(cell);
                     topcell = this.GetOwnCell(topcell);
-                    if (topcell.BottomLineStyle == null) {
-                        cell.TopLineStyle = style;
+                    if (topcell != null) {
+                        if (topcell.BottomLineStyle == null) {
+                            cell.TopLineStyle = style;
+                        }
                     }
                     cell.RightLineStyle = style;
                     cell.BottomLineStyle = style;
@@ -6311,7 +6270,7 @@ class DataExcel {
         if (cell == this.FocusedCell)
             return;
         let precell = this.FocusedCell;
-        this.CellEvent = cell;
+        this.CurrentEvent = cell;
         this.FocusedCell = cell;
         this.SetSelectCells(cell);
         this.ShowCell(precell, this.FocusedCell);
@@ -7415,7 +7374,7 @@ class DataExcelCell {
             let datetnow = new Date();
             let d = (datetnow.valueOf() - this.downtime.valueOf()) / 1000;
             if (d > 0.05 && d < 0.8) {
-                ve.CellEvent = this;
+                ve.CurrentEvent = this;
             }
         }
         return false;
@@ -9414,20 +9373,20 @@ class Chart {
     //}
     //Over
     OnMouseDown(sender, e, ve) {
-        if (this.Rect.Contains(ve.Point)) {
-            this.MouseDownPoint = ve.Point;
+        if (this.Rect.Contains(ve.offsetPoint)) {
+            this.MouseDownPoint = ve.offsetPoint;
             this.MouseDownSize = new Size(this.Left, this.Top);
             this.StateMode = StateMode.MOVE;
             this.Grid.ClearSelect();
             this.Selected = true;
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         if (this.SizeChangedMouseDown(ve)) {
             this.StateMode = StateMode.SIZE;
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
@@ -9438,14 +9397,14 @@ class Chart {
     }
     OnMouseMove(sender, e, ve) {
         if (this.StateMode == StateMode.MOVE) {
-            let x = ve.Point.X - this.MouseDownPoint.X;
-            let y = ve.Point.Y - this.MouseDownPoint.Y;
+            let x = ve.offsetPoint.X - this.MouseDownPoint.X;
+            let y = ve.offsetPoint.Y - this.MouseDownPoint.Y;
             this.Left = this.MouseDownSize.Width + x;
             this.Top = this.MouseDownSize.Height + y;
             this.dom.style.left = this.Left + "px";
             this.dom.style.top = this.Top + "px";
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         if (this.StateMode == StateMode.SIZE) {
@@ -9456,12 +9415,12 @@ class Chart {
             this.dom.style.height = this.Height + "px";
             this.chart.resize();
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         else if (this.SizeChangedMouseDown(ve)) {
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
@@ -9511,8 +9470,8 @@ class Chart {
         }
     }
     SizeChangedMouseDown(ve) {
-        let pt = ve.Point;
-        this.MouseDownPoint = ve.Point;
+        let pt = ve.offsetPoint;
+        this.MouseDownPoint = ve.offsetPoint;
         this.MouseDownSize = new Size(this.Width, this.Height);
         let result = false;
         if (this.TopLeft.Contains(pt)) {
@@ -9558,7 +9517,7 @@ class Chart {
         return result;
     }
     ChangedSize(ve) {
-        let location = ve.Point; // e.Location;
+        let location = ve.offsetPoint; // e.Location;
         let sf = new Size(location.X - this.MouseDownPoint.X, location.Y - this.MouseDownPoint.Y);
         switch (this.SizeChangMode) {
             case SizeChangMode.Null:
@@ -9676,7 +9635,6 @@ class Primitive {
         this._BackImageImageLayout = ImageLayout.ZoomClip;
         this._SelectBorderWidth = 6;
         this.CurrentDiaplay = null;
-        this.timeid = -1;
         this.Displayables = new DisplayableList();
     }
     get Name() {
@@ -9877,7 +9835,7 @@ class Primitive {
         try {
             for (var i = 0; i < this.Displayables.Count; i++) {
                 let display = this.Displayables.Get(i);
-                display.OnDisplayDrawBack(sender, g);
+                display.OnDrawBack(sender, g);
             }
         }
         catch (e) {
@@ -9887,41 +9845,50 @@ class Primitive {
     }
     OnMouseDown(sender, e, ve) {
         if (this.CurrentDiaplay != null) {
-            ve.offsetX = ve.Point.X - this.Left;
-            ve.offsetY = ve.Point.Y - this.Top;
-            let res = this.CurrentDiaplay.OnDisplayMouseDown(sender, e, ve);
+            ve.offsetPoint.X = ve.offsetPoint.X - this.Left;
+            ve.offsetPoint.Y = ve.offsetPoint.Y - this.Top;
+            let res = this.CurrentDiaplay.OnMouseDown(sender, e, ve);
             if (res) {
-                ve.NeedRePaint = true;
-                ve.CellEvent = this;
+                return res;
+            }
+        }
+        for (var i = 0; i < this.Displayables.Count; i++) {
+            let disp = this.Displayables.Get(i);
+            if (disp == null) {
+                DataExcelConsole.log("Primitive OnMouseDown error", e);
+                continue;
+            }
+            let res = disp.OnMouseDown(sender, e, ve);
+            if (res) {
                 return res;
             }
         }
         if (this.SizeChangedMouseDown(ve)) {
             this.StateMode = StateMode.SIZE;
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
-        if (this.Bound.Contains(ve.Point)) {
-            this.MouseDownPoint = ve.Point;
+        if (this.Bound.Contains(ve.offsetPoint)) {
+            this.MouseDownPoint = ve.offsetPoint;
             this.MouseDownSize = new Size(this.Left, this.Top);
             this.StateMode = StateMode.MOVE;
             this.Grid.ClearSelect();
             this.Selected = true;
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
     }
     OnMouseUp(sender, e, ve) {
         if (this.CurrentDiaplay != null) {
-            ve.offsetX = ve.Point.X - this.Left;
-            ve.offsetY = ve.Point.Y - this.Top;
-            let res = this.CurrentDiaplay.OnDisplayMouseUp(sender, e, ve);
+            ve.offsetPoint.X = ve.offsetPoint.X - this.Left;
+            ve.offsetPoint.Y = ve.offsetPoint.Y - this.Top;
+            let res = this.CurrentDiaplay.OnMouseUp(sender, e, ve);
             if (res) {
                 ve.NeedRePaint = true;
-                ve.CellEvent = this;
+                ve.CurrentEvent = this;
                 return res;
             }
         }
@@ -9931,37 +9898,37 @@ class Primitive {
     }
     OnMouseMove(sender, e, ve) {
         if (this.CurrentDiaplay != null) {
-            ve.offsetX = ve.Point.X - this.Left;
-            ve.offsetY = ve.Point.Y - this.Top;
-            let res = this.CurrentDiaplay.OnDisplayMouseMove(sender, e, ve);
+            ve.offsetPoint.X = ve.offsetPoint.X - this.Left;
+            ve.offsetPoint.Y = ve.offsetPoint.Y - this.Top;
+            let res = this.CurrentDiaplay.OnMouseMove(sender, e, ve);
             if (res) {
                 ve.NeedRePaint = true;
-                ve.CellEvent = this;
+                ve.CurrentEvent = this;
                 return res;
             }
         }
         if (this.StateMode == StateMode.SIZE) {
             this.ChangedSize(ve);
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         if (this.StateMode == StateMode.MOVE) {
-            let x = ve.Point.X - this.MouseDownPoint.X;
-            let y = ve.Point.Y - this.MouseDownPoint.Y;
+            let x = ve.offsetPoint.X - this.MouseDownPoint.X;
+            let y = ve.offsetPoint.Y - this.MouseDownPoint.Y;
             this.Left = this.MouseDownSize.Width + x;
             this.Top = this.MouseDownSize.Height + y;
             ve.NeedRePaint = true;
-            ve.CellEvent = this;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
     }
     OnMouseDoubleClick(sender, e, ve) {
         if (this.CurrentDiaplay != null) {
-            ve.offsetX = ve.Point.X - this.Left;
-            ve.offsetY = ve.Point.Y - this.Top;
-            let res = this.CurrentDiaplay.OnDisplayMouseDoubleClick(sender, e, ve);
+            ve.offsetPoint.X = ve.offsetPoint.X - this.Left;
+            ve.offsetPoint.Y = ve.offsetPoint.Y - this.Top;
+            let res = this.CurrentDiaplay.OnMouseDoubleClick(sender, e, ve);
             if (res) {
                 return res;
             }
@@ -9985,6 +9952,7 @@ class Primitive {
     }
     Clear() {
         try {
+            this.CurrentDiaplay = null;
             this.Displayables.Clear();
         }
         catch (e) {
@@ -9994,8 +9962,8 @@ class Primitive {
     Clone() {
     }
     SizeChangedMouseDown(ve) {
-        let pt = ve.Point;
-        this.MouseDownPoint = ve.Point;
+        let pt = ve.offsetPoint;
+        this.MouseDownPoint = ve.offsetPoint;
         this.MouseDownSize = new Size(this.Width, this.Height);
         let result = false;
         if (this.TopLeft.Contains(pt)) {
@@ -10033,7 +10001,7 @@ class Primitive {
         return result;
     }
     ChangedSize(ve) {
-        let location = ve.Point; // e.Location;
+        let location = ve.offsetPoint; // e.Location;
         let sf = new Size(location.X - this.MouseDownPoint.X, location.Y - this.MouseDownPoint.Y);
         switch (this.SizeChangMode) {
             case SizeChangMode.Null:
@@ -10076,79 +10044,85 @@ class Primitive {
                 break;
         }
     }
+    //private timeid: number = -1;
     //timer
-    OpenTime() {
-        if (this.timeid > -1) {
-            return;
-        }
-        this.timeid = setInterval(this.OnTimerInterval, 100, this);
-    }
-    CloseTime() {
-        try {
-            if (this.timeid == -1) {
-                return;
-            }
-            clearInterval(this.timeid);
-            this.timeid = -1;
-        }
-        catch (e) {
-            DataExcelConsole.log("CloseTime", e);
-        }
-    }
-    OnTimerInterval(obj) {
-        try {
-            let pri = obj;
-            if (pri.CurrentDiaplay != null) {
-                let res = pri.CurrentDiaplay.OnTimerInterval();
-                if (res) {
-                    return res;
-                }
-            }
-            pri.CloseTime();
-        }
-        catch (e) {
-            DataExcelConsole.log("OnTimerInterval", e);
-        }
-    }
+    //OpenTime()
+    //{
+    //    if (this.timeid > -1)
+    //    {
+    //        return;
+    //    }
+    //    this.timeid = setInterval(this.OnTimerInterval, 100,this);
+    //}
+    //CloseTime()
+    //{
+    //    try
+    //    {
+    //        if (this.timeid==-1)
+    //        {
+    //            return;
+    //        }
+    //        clearInterval(this.timeid);
+    //        this.timeid = -1;
+    //    } catch (e)
+    //    {
+    //        DataExcelConsole.log("CloseTime", e);     
+    //    }
+    //}
+    //OnTimerInterval(obj)
+    //{
+    //    try
+    //    {
+    //        let pri = obj as Primitive;
+    //        if (pri.CurrentDiaplay != null)
+    //        {
+    //            let res = pri.CurrentDiaplay.OnTimerInterval();
+    //            if (res)
+    //            {
+    //                return res;
+    //            }
+    //        }
+    //        pri.CloseTime();
+    //    } catch (e)
+    //    {
+    //        DataExcelConsole.log("OnTimerInterval", e);
+    //    } 
+    //}
     //displayable
     NewDiaplayLine() {
         let item = new DisplayableLine();
         item.Grid = this.Grid;
         item.Primitive = this;
-        item.OrgWidth = this.Width;
-        item.OrgHeight = this.Height;
         this.Displayables.Add(item);
         this.CurrentDiaplay = item;
+        this.Grid.CurrentEvent = this.CurrentDiaplay;
         return item;
     }
     NewDiaplayRect() {
         let item = new DisplayableRect();
         item.Grid = this.Grid;
         item.Primitive = this;
-        item.OrgWidth = this.Width;
-        item.OrgHeight = this.Height;
         this.Displayables.Add(item);
         this.CurrentDiaplay = item;
+        this.Grid.CurrentEvent = this.CurrentDiaplay;
         return item;
     }
     NewDiaplayText() {
         let item = new DisplayableText();
         item.Grid = this.Grid;
         item.Primitive = this;
-        item.OrgWidth = this.Width;
-        item.OrgHeight = this.Height;
         this.Displayables.Add(item);
         this.CurrentDiaplay = item;
+        this.Grid.CurrentEvent = this.CurrentDiaplay;
         return item;
     }
     NewDiaplayCircle() {
         let item = new DisplayableCircle();
         item.Grid = this.Grid;
         item.Primitive = this;
-        item.OrgWidth = this.Width;
-        item.OrgHeight = this.Height;
         this.Displayables.Add(item);
         this.CurrentDiaplay = item;
+        this.Grid.CurrentEvent = this.CurrentDiaplay;
         return item;
     }
 }
@@ -10228,6 +10202,7 @@ class Displayable {
         this._BackImage = "";
         this._BackImageImageLayout = ImageLayout.ZoomClip;
         this._SelectBorderWidth = 6;
+        this._DesignMode = false;
     }
     get Grid() {
         return this._Grid;
@@ -10342,6 +10317,18 @@ class Displayable {
     set StateMode(value) {
         this._StateMode_1 = value;
     }
+    get Selected() {
+        return this._Selected;
+    }
+    set Selected(value) {
+        this._Selected = value;
+    }
+    get DesignMode() {
+        return this._DesignMode;
+    }
+    set DesignMode(value) {
+        this._DesignMode = value;
+    }
     get TopLeft() {
         let rectf = new Rect(this.Left - this._SelectBorderWidth - this._SelectBorderWidth, this.Top - this._SelectBorderWidth - this._SelectBorderWidth, this._SelectBorderWidth, this._SelectBorderWidth);
         return rectf;
@@ -10378,12 +10365,16 @@ class Displayable {
     }
     SetData(grid, data) {
     }
-    Mixin(obj) {
-    }
     OnDraw(sender, g) {
         return false;
     }
     OnDrawBack(sender, g) {
+        return false;
+    }
+    DoDraw(sender, g) {
+        return false;
+    }
+    DoDrawBack(sender, g) {
         if (this.Grid == null)
             console.log("this.Grid == null");
         if (this.BackColor != null) {
@@ -10405,38 +10396,12 @@ class Displayable {
         return false;
     }
     OnMouseDown(sender, e, ve) {
-        if (this.SizeChangedMouseDown(ve)) {
-            this.StateMode = StateMode.SIZE;
-            return true;
-        }
-        if (this.Bound.Contains(ve.Point)) {
-            this.MouseDownPoint = ve.Point;
-            this.MouseDownSize = new Size(this.Left, this.Top);
-            this.StateMode = StateMode.MOVE;
-            this.Grid.ClearSelect();
-            this.Selected = true;
-            this.Grid.RePaint();
-            return true;
-        }
         return false;
     }
     OnMouseUp(sender, e, ve) {
-        this.StateMode = StateMode.NULL;
         return false;
     }
     OnMouseMove(sender, e, ve) {
-        if (this.StateMode == StateMode.SIZE) {
-            this.ChangedSize(ve);
-            this.Grid.RePaint();
-        }
-        if (this.StateMode == StateMode.MOVE) {
-            let x = ve.Point.X - this.MouseDownPoint.X;
-            let y = ve.Point.Y - this.MouseDownPoint.Y;
-            this.Left = this.MouseDownSize.Width + x;
-            this.Top = this.MouseDownSize.Height + y;
-            this.Grid.RePaint();
-            return true;
-        }
         return false;
     }
     OnMouseDoubleClick(sender, e, ve) {
@@ -10459,9 +10424,38 @@ class Displayable {
     }
     Clone() {
     }
-    SizeChangedMouseDown(ve) {
-        let pt = ve.Point;
-        this.MouseDownPoint = ve.Point;
+    DoMouseDown(sender, e, ve) {
+        if (this.MouseDownSizeChanged(ve)) {
+            this.StateMode = StateMode.SIZE;
+            return true;
+        }
+        if (this.MouseDownMove(ve)) {
+            return true;
+        }
+        return false;
+    }
+    DoMouseUp(sender, e, ve) {
+        this.StateMode = StateMode.NULL;
+        return false;
+    }
+    DoMouseMove(sender, e, ve) {
+        if (this.StateMode == StateMode.SIZE) {
+            this.ChangedSize(ve);
+            this.Grid.RePaint();
+        }
+        if (this.StateMode == StateMode.MOVE) {
+            let x = ve.offsetPoint.X - this.MouseDownPoint.X;
+            let y = ve.offsetPoint.Y - this.MouseDownPoint.Y;
+            this.Left = this.MouseDownSize.Width + x;
+            this.Top = this.MouseDownSize.Height + y;
+            this.Grid.RePaint();
+            return true;
+        }
+        return false;
+    }
+    MouseDownSizeChanged(ve) {
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+        this.MouseDownPoint = pt;
         this.MouseDownSize = new Size(this.Width, this.Height);
         let result = false;
         if (this.TopLeft.Contains(pt)) {
@@ -10498,8 +10492,21 @@ class Displayable {
         }
         return result;
     }
+    MouseDownMove(ve) {
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+        if (this.Bound.Contains(pt)) {
+            this.MouseDownPoint = pt;
+            this.MouseDownSize = new Size(this.Left, this.Top);
+            this.StateMode = StateMode.MOVE;
+            this.Grid.ClearSelect();
+            this.Selected = true;
+            this.Grid.RePaint();
+            return true;
+        }
+        return false;
+    }
     ChangedSize(ve) {
-        let location = ve.Point; // e.Location;
+        let location = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
         let sf = new Size(location.X - this.MouseDownPoint.X, location.Y - this.MouseDownPoint.Y);
         switch (this.SizeChangMode) {
             case SizeChangMode.Null:
@@ -10542,44 +10549,6 @@ class Displayable {
                 break;
         }
     }
-    //virtual method
-    OnDisplayDraw(sender, g) {
-        return false;
-    }
-    OnDisplayDrawBack(sender, g) {
-        return false;
-    }
-    OnDisplayMouseDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayMouseUp(sender, e, ve) {
-        return false;
-    }
-    OnDisplayMouseMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayMouseDoubleClick(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyPress(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchStart(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchEnd(sender, e, ve) {
-        return false;
-    }
-    OnTimerInterval() {
-        this.Primitive.CloseTime();
-        return false;
-    }
 }
 const DisplayableBuild = {
     line: "line",
@@ -10609,43 +10578,26 @@ const DisplayableBuild = {
 class DisplayableCircle extends Displayable {
     constructor() {
         super();
-        this._PointStart = null;
-        this._PointEnd = null;
-        this.DesignMode = false;
-        this.lastpoint = null;
         this._Animation = true;
+        this.init = true;
         let style = {
             option: {
-                position: [300, 280],
                 style: { fill: '#87CEFA', lineWidth: 5 },
-                shape: { r: 30 },
+                shape: { r: 30, cx: 200, cy: 200 },
             },
             animate: [
-                { type: "style", interval: 3000, value: { fill: 'white' } },
-                { type: "style", interval: 6000, value: { fill: '#87CEFA' } },
-                { type: "style", interval: 2500, value: { r: 60 } },
-                { type: "style", interval: 5000, value: { r: 30 } }
+                {
+                    type: "style", interval: 3000, value: { fill: 'white' }, animate: { interval: 6000, value: { fill: '#87CEFA' } }
+                },
+                {
+                    type: "shape", interval: 3000, value: { r: 60 }, animate: { interval: 6000, value: { r: 30 } }
+                }
             ]
         };
         this._Style = style;
     }
     get TypeName() {
         return DisplayableBuild.circ;
-    }
-    get PointStart() {
-        return this._PointStart;
-    }
-    set PointStart(value) {
-        this._PointStart = value;
-    }
-    get PointEnd() {
-        return this._PointEnd;
-    }
-    set PointEnd(value) {
-        if (this._PointEnd != null) {
-            return;
-        }
-        this._PointEnd = value;
     }
     get Animation() {
         return this._Animation;
@@ -10658,18 +10610,6 @@ class DisplayableCircle extends Displayable {
     }
     set Style(value) {
         this._Style = value;
-    }
-    get OrgWidth() {
-        return this._OrgWidth;
-    }
-    set OrgWidth(value) {
-        this._OrgWidth = value;
-    }
-    get OrgHeight() {
-        return this._OrgHeight;
-    }
-    set OrgHeight(value) {
-        this._OrgHeight = value;
     }
     GetData() {
         let data = {
@@ -10684,10 +10624,6 @@ class DisplayableCircle extends Displayable {
             backimageimagelayout: this.BackImageImageLayout,
             style: this.Style,
             animation: this.Animation,
-            orgwidth: this.OrgWidth,
-            orgheight: this.OrgHeight,
-            pointstart: [this.PointStart.X, this.PointStart.Y],
-            pointend: [this.PointEnd.X, this.PointEnd.Y],
         };
         return data;
     }
@@ -10702,125 +10638,74 @@ class DisplayableCircle extends Displayable {
         this.BackImageImageLayout = data.backimageimagelayout;
         this.Style = data.style;
         this.Animation = data.animation;
-        this.OrgWidth = data.orgwidth;
-        this.OrgHeight = data.orgheight;
-        this.PointStart = new Point(data.pointstart[0], data.pointstart[1]);
-        this.PointEnd = new Point(data.pointend[0], data.pointend[1]);
     }
-    OnDisplayDraw(sender, g) {
-        if (this.OnDraw(sender, g)) {
-            return true;
-        }
-        return false;
-    }
-    OnDisplayDrawBack(sender, g) {
+    OnDrawBack(sender, g) {
         try {
-            if (this.OnDrawBack(sender, g)) {
+            if (this.DoDrawBack(sender, g)) {
                 return true;
             }
             if (this.Selected) {
                 g.FillRect(Palette.A3399FF80, this.Left, this.Top, this.Width, this.Height);
             }
-            if (this.PointStart == null)
-                return false;
-            let zoomx = this.Primitive.Width / this.OrgWidth;
-            let zoomy = this.Primitive.Height / this.OrgHeight;
-            let x1 = Math.round((this.PointStart.X * zoomx + this.Primitive.Left));
-            let y1 = Math.round((this.PointStart.Y * zoomy + this.Primitive.Top));
-            let x2 = x1;
-            let y2 = y1;
-            if (this.PointEnd != null) {
-                x2 = Math.round((this.PointEnd.X * zoomx + this.Primitive.Left));
-                y2 = Math.round((this.PointEnd.Y * zoomy + this.Primitive.Top));
-            }
-            else {
-                if (this.DesignMode) {
-                    if (this.lastpoint != null) {
-                        x2 = Math.round((this.lastpoint.X * zoomx + this.Primitive.Left));
-                        y2 = Math.round((this.lastpoint.Y * zoomy + this.Primitive.Top));
-                    }
-                }
-            }
-            let w1 = x2 - x1;
-            let h1 = y2 - y1;
-            this.Style.option.shape.x = x1;
-            this.Style.option.shape.y = y1;
-            this.Style.option.shape.width = w1;
-            this.Style.option.shape.height = h1;
-            this.Style.option.shape.r = w1;
-            this.Style.option.position = [x1, y1];
+            this.Style.option.shape.cx = this.Left + this.Width / 2;
+            this.Style.option.shape.cy = this.Top + this.Width / 2;
+            this.Style.option.shape.r = Math.abs(this.Width / 2);
             g.DrawPrimitiveCircle(this.Style, this.Animation);
         }
         catch (e) {
-            DataExcelConsole.log("DisplayableLine OnDisplayDrawBack", e);
+            DataExcelConsole.log("DisplayableCircle OnDrawBack", e);
         }
         return false;
     }
-    OnDisplayMouseDown(sender, e, ve) {
-        if (this.OnMouseDown(sender, e, ve)) {
+    OnMouseDown(sender, e, ve) {
+        if (this.DoMouseDown(sender, e, ve)) {
+            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
             return true;
         }
-        if (!this.Primitive.Rect.Contains(ve.Point)) {
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+        if (!this.Primitive.Rect.Contains(ve.offsetPoint)) {
             this.DesignMode = false;
             return false;
         }
-        if (this.PointStart == null) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointStart = (pt);
+        if (this.init) {
             this.DesignMode = true;
-            this.lastpoint = null;
+            this.Left = pt.X;
+            this.Top = pt.Y;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            this.init = false;
+            return true;
+        }
+        return false;
+    }
+    OnMouseUp(sender, e, ve) {
+        if (this.DoMouseUp(sender, e, ve)) {
             return true;
         }
         if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Width = pt.X - this.Left;
+            this.Height = pt.Y - this.Top;
             this.DesignMode = false;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
     }
-    OnDisplayMouseUp(sender, e, ve) {
-        if (this.OnMouseUp(sender, e, ve)) {
-            return true;
-        }
-        if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
-            this.DesignMode = false;
-            ve.NeedRePaint = true;
-        }
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayMouseMove(sender, e, ve) {
-        if (this.OnMouseMove(sender, e, ve)) {
+    OnMouseMove(sender, e, ve) {
+        if (this.DoMouseMove(sender, e, ve)) {
             return true;
         }
         if (this.DesignMode) {
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Width = pt.X - this.Left;
+            this.Height = pt.Y - this.Top;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            return true;
         }
-        this.lastpoint = new Point(ve.offsetX, ve.offsetY);
-        return false;
-    }
-    OnDisplayMouseDoubleClick(sender, e, ve) {
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayKeyPress(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchStart(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchEnd(sender, e, ve) {
         return false;
     }
 }
@@ -10828,9 +10713,9 @@ class DisplayableLine extends Displayable {
     constructor() {
         super();
         this.Points = null;
-        this.DesignMode = false;
         this.lastpoint = null;
         this._Animation = true;
+        this.init = true;
         this.Points = new List();
         let style = {
             option: {
@@ -10843,28 +10728,23 @@ class DisplayableLine extends Displayable {
                 },
                 shape: {
                     points: [],
-                    smooth: 1
+                    smooth: 0
                 },
             },
-            animate: [{
-                    type: "style",
-                    interval: 3000,
-                    value: {
-                        lineWidth: 7,
-                        shadowBlur: 18,
-                        stroke: "white",
-                    }
-                }, {
-                    type: "shape",
-                    interval: 3000,
-                    value: {
-                        smooth: 0
-                    }
+            animate: [
+                {
+                    type: "style", interval: 2500, value: { lineWidth: 7, shadowBlur: 18, stroke: "white" },
+                    animate: { interval: 5000, value: { lineWidth: 1, shadowBlur: 8, stroke: "rgba(220, 20, 60, 0.8)" } }
                 },
+                {
+                    type: "shape", interval: 3000, value: { smooth: 1 },
+                    animate: { interval: 6000, value: { smooth: 0 } }
+                }
             ]
         };
         this._Style = style;
     }
+    //private lasttime: Date;
     get TypeName() {
         return DisplayableBuild.line;
     }
@@ -10880,18 +10760,6 @@ class DisplayableLine extends Displayable {
     set Style(value) {
         this._Style = value;
     }
-    get OrgWidth() {
-        return this._OrgWidth;
-    }
-    set OrgWidth(value) {
-        this._OrgWidth = value;
-    }
-    get OrgHeight() {
-        return this._OrgHeight;
-    }
-    set OrgHeight(value) {
-        this._OrgHeight = value;
-    }
     GetData() {
         let data = {
             typename: this.TypeName,
@@ -10905,8 +10773,6 @@ class DisplayableLine extends Displayable {
             backimageimagelayout: this.BackImageImageLayout,
             style: this.Style,
             animation: this.Animation,
-            orgwidth: this.OrgWidth,
-            orgheight: this.OrgHeight,
             points: [],
         };
         let points = [];
@@ -10917,6 +10783,7 @@ class DisplayableLine extends Displayable {
         return data;
     }
     SetData(grid, data) {
+        this.init = false;
         this.Name = data.name;
         this.Height = data.height;
         this.Left = data.left;
@@ -10927,8 +10794,6 @@ class DisplayableLine extends Displayable {
         this.BackImageImageLayout = data.backimageimagelayout;
         this.Style = data.style;
         this.Animation = data.animation;
-        this.OrgWidth = data.orgwidth;
-        this.OrgHeight = data.orgheight;
         let len = data.points.length;
         for (let i = 0; i < len; i++) {
             let itemdata = data.points[i];
@@ -10937,29 +10802,23 @@ class DisplayableLine extends Displayable {
             this.Points.add(new Point(x, y));
         }
     }
-    OnDisplayDraw(sender, g) {
-        if (this.OnDraw(sender, g)) {
-            return true;
-        }
-        return false;
-    }
-    OnDisplayDrawBack(sender, g) {
+    OnDrawBack(sender, g) {
         try {
-            if (this.OnDrawBack(sender, g)) {
+            if (this.DoDrawBack(sender, g)) {
                 return true;
             }
             if (this.Selected) {
                 g.FillRect(Palette.A3399FF80, this.Left, this.Top, this.Width, this.Height);
             }
             let points = [];
-            let zoomx = this.Primitive.Width / this.OrgWidth;
-            let zoomy = this.Primitive.Height / this.OrgHeight;
+            let zoomx = 1;
+            let zoomy = 1;
             this.Points.forEach((point) => {
-                points.push([(point.X * zoomx + this.Primitive.Left), (point.Y * zoomy + this.Primitive.Top)]);
+                points.push([(point.X * zoomx), (point.Y * zoomy)]);
             });
             if (this.DesignMode) {
                 if (this.lastpoint != null) {
-                    points.push([(this.lastpoint.X * zoomx + this.Primitive.Left), (this.lastpoint.Y * zoomy + this.Primitive.Top)]);
+                    points.push([(this.lastpoint.X * zoomx), (this.lastpoint.Y * zoomy)]);
                 }
             }
             this.Style.option.shape.points = points;
@@ -10970,97 +10829,71 @@ class DisplayableLine extends Displayable {
         }
         return false;
     }
-    OnDisplayMouseDown(sender, e, ve) {
-        if (this.OnMouseDown(sender, e, ve)) {
+    OnMouseDown(sender, e, ve) {
+        if (this.DoMouseDown(sender, e, ve)) {
             return true;
         }
-        if (!this.Primitive.Rect.Contains(ve.Point)) {
+        if (!this.Primitive.Rect.Contains(ve.offsetPoint)) {
             this.DesignMode = false;
             return false;
         }
-        if (this.Points.Count < 1) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.Points.Add(pt);
-            this.DesignMode = true;
-            this.lasttime = new Date();
-            this.Primitive.OpenTime();
-            this.lastpoint = null;
-            ve.NeedRePaint = true;
-            return true;
-        }
-        if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.Points.Add(pt);
-            this.DesignMode = true;
-            this.lasttime = new Date();
-            this.Primitive.OpenTime();
-            this.lastpoint = null;
-            ve.NeedRePaint = true;
-            return true;
-        }
-        return false;
-    }
-    OnDisplayMouseUp(sender, e, ve) {
-        if (this.OnMouseUp(sender, e, ve)) {
-            return true;
-        }
-        if (this.DesignMode) {
-            if (e.button == MouseButtons.Right) {
+        if (e.button == MouseButtons.Right) {
+            if (this.DesignMode) {
                 this.DesignMode = false;
+                return true;
             }
-            return this.DesignMode;
         }
-        return false;
-    }
-    OnDisplayMouseMove(sender, e, ve) {
-        if (this.OnMouseMove(sender, e, ve)) {
-            return true;
-        }
-        if (this.DesignMode) {
+        if (this.init) {
+            this.init = false;
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Points.Add(pt);
+            this.DesignMode = true;
+            //this.lasttime = new Date();
+            //this.Primitive.OpenTime();
+            this.lastpoint = null;
             ve.NeedRePaint = true;
-        }
-        this.lastpoint = new Point(ve.offsetX, ve.offsetY);
-        this.lasttime = new Date();
-        return false;
-    }
-    OnDisplayMouseDoubleClick(sender, e, ve) {
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayKeyPress(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchStart(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchEnd(sender, e, ve) {
-        return false;
-    }
-    OnTimerInterval() {
-        if (this.DesignMode) {
-            if (this.lastpoint != null) {
-                let time = (new Date().getTime() - this.lasttime.getTime());
-                if (time > DisplayableLine.timeuse) {
-                    let pt = this.lastpoint;
-                    this.Points.Add(pt);
-                    this.lasttime = new Date();
-                    this.lastpoint = null;
-                    this.Grid.RePaint();
-                }
-            }
+            ve.CurrentEvent = this;
             return true;
         }
-        this.Primitive.CloseTime();
+        if (this.DesignMode) {
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Points.Add(pt);
+            this.DesignMode = true;
+            //this.lasttime = new Date();
+            //this.Primitive.OpenTime();
+            this.lastpoint = null;
+            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            return true;
+        }
+        return false;
+    }
+    OnMouseUp(sender, e, ve) {
+        if (this.DoMouseUp(sender, e, ve)) {
+            return true;
+        }
+        return false;
+    }
+    OnMouseMove(sender, e, ve) {
+        if (this.DoMouseMove(sender, e, ve)) {
+            return true;
+        }
+        if (this.DesignMode) {
+            this.lastpoint = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            return true;
+        }
+        return false;
+    }
+    OnMouseDoubleClick(sender, e, ve) {
+        if (this.DesignMode) {
+            this.DesignMode = false;
+            return true;
+        }
         return false;
     }
 }
-DisplayableLine.timeuse = 600;
 class DisplayableList extends List {
     constructor() {
         super();
@@ -11078,11 +10911,8 @@ class DisplayableList extends List {
 class DisplayableRect extends Displayable {
     constructor() {
         super();
-        this._PointStart = null;
-        this._PointEnd = null;
-        this.DesignMode = false;
-        this.lastpoint = null;
         this._Animation = true;
+        this.init = true;
         let style = {
             option: {
                 style: {
@@ -11102,42 +10932,23 @@ class DisplayableRect extends Displayable {
                     r: 10
                 },
             },
-            animate: [{
-                    type: "style",
-                    interval: 3000,
-                    value: {
-                        lineWidth: 7,
-                        shadowBlur: 18,
-                        stroke: "white",
-                    }
-                }, {
-                    type: "shape",
-                    interval: 3000,
-                    value: {
-                        smooth: 0
+            animate: [
+                {
+                    type: "style", interval: 3000, value: { lineWidth: 7, shadowBlur: 18, stroke: "white" },
+                    animate: {
+                        interval: 6000, value: { lineWidth: 1, shadowBlur: 8, stroke: "rgba(220, 20, 60, 0.8)", }
                     }
                 },
+                {
+                    type: "shape", interval: 3000, value: { smooth: 0 },
+                    animate: { interval: 6000, value: { smooth: 1 } },
+                }
             ]
         };
         this._Style = style;
     }
     get TypeName() {
         return DisplayableBuild.rect;
-    }
-    get PointStart() {
-        return this._PointStart;
-    }
-    set PointStart(value) {
-        this._PointStart = value;
-    }
-    get PointEnd() {
-        return this._PointEnd;
-    }
-    set PointEnd(value) {
-        if (this._PointEnd != null) {
-            return;
-        }
-        this._PointEnd = value;
     }
     get Animation() {
         return this._Animation;
@@ -11150,18 +10961,6 @@ class DisplayableRect extends Displayable {
     }
     set Style(value) {
         this._Style = value;
-    }
-    get OrgWidth() {
-        return this._OrgWidth;
-    }
-    set OrgWidth(value) {
-        this._OrgWidth = value;
-    }
-    get OrgHeight() {
-        return this._OrgHeight;
-    }
-    set OrgHeight(value) {
-        this._OrgHeight = value;
     }
     GetData() {
         let data = {
@@ -11176,10 +10975,6 @@ class DisplayableRect extends Displayable {
             backimageimagelayout: this.BackImageImageLayout,
             style: this.Style,
             animation: this.Animation,
-            orgwidth: this.OrgWidth,
-            orgheight: this.OrgHeight,
-            pointstart: [this.PointStart.X, this.PointStart.Y],
-            pointend: [this.PointEnd.X, this.PointEnd.Y],
         };
         return data;
     }
@@ -11194,51 +10989,19 @@ class DisplayableRect extends Displayable {
         this.BackImageImageLayout = data.backimageimagelayout;
         this.Style = data.style;
         this.Animation = data.animation;
-        this.OrgWidth = data.orgwidth;
-        this.OrgHeight = data.orgheight;
-        this.PointStart = new Point(data.pointstart[0], data.pointstart[1]);
-        this.PointEnd = new Point(data.pointend[0], data.pointend[1]);
     }
-    OnDisplayDraw(sender, g) {
-        if (this.OnDraw(sender, g)) {
-            return true;
-        }
-        return false;
-    }
-    OnDisplayDrawBack(sender, g) {
+    OnDrawBack(sender, g) {
         try {
-            if (this.OnDrawBack(sender, g)) {
+            if (this.DoDrawBack(sender, g)) {
                 return true;
             }
             if (this.Selected) {
                 g.FillRect(Palette.A3399FF80, this.Left, this.Top, this.Width, this.Height);
             }
-            if (this.PointStart == null)
-                return false;
-            let zoomx = this.Primitive.Width / this.OrgWidth;
-            let zoomy = this.Primitive.Height / this.OrgHeight;
-            let x1 = Math.round((this.PointStart.X * zoomx + this.Primitive.Left));
-            let y1 = Math.round((this.PointStart.Y * zoomy + this.Primitive.Top));
-            let x2 = x1;
-            let y2 = y1;
-            if (this.PointEnd != null) {
-                x2 = Math.round((this.PointEnd.X * zoomx + this.Primitive.Left));
-                y2 = Math.round((this.PointEnd.Y * zoomy + this.Primitive.Top));
-            }
-            else {
-                if (this.DesignMode) {
-                    if (this.lastpoint != null) {
-                        x2 = Math.round((this.lastpoint.X * zoomx + this.Primitive.Left));
-                        y2 = Math.round((this.lastpoint.Y * zoomy + this.Primitive.Top));
-                    }
-                }
-            }
-            let w1 = x2 - x1;
-            let h1 = y2 - y1;
-            this.Style.option.shape.x = x1;
-            this.Style.option.shape.y = y1;
-            this.Style.option.shape.width = w1;
-            this.Style.option.shape.height = h1;
+            this.Style.option.shape.x = this.Left;
+            this.Style.option.shape.y = this.Top;
+            this.Style.option.shape.width = this.Width;
+            this.Style.option.shape.height = this.Height;
             g.DrawPrimitiveRect(this.Style, this.Animation);
         }
         catch (e) {
@@ -11246,83 +11009,64 @@ class DisplayableRect extends Displayable {
         }
         return false;
     }
-    OnDisplayMouseDown(sender, e, ve) {
-        if (this.OnMouseDown(sender, e, ve)) {
+    OnMouseDown(sender, e, ve) {
+        if (this.DoMouseDown(sender, e, ve)) {
+            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
             return true;
         }
-        if (!this.Primitive.Rect.Contains(ve.Point)) {
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+        if (!this.Primitive.Rect.Contains(ve.offsetPoint)) {
             this.DesignMode = false;
             return false;
         }
-        if (this.PointStart == null) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointStart = (pt);
+        if (this.init) {
             this.DesignMode = true;
-            this.lastpoint = null;
+            this.Left = pt.X;
+            this.Top = pt.Y;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            this.init = false;
+            return true;
+        }
+        return false;
+    }
+    OnMouseUp(sender, e, ve) {
+        if (this.DoMouseUp(sender, e, ve)) {
             return true;
         }
         if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Width = pt.X - this.Left;
+            this.Height = pt.Y - this.Top;
             this.DesignMode = false;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
             return true;
         }
         return false;
     }
-    OnDisplayMouseUp(sender, e, ve) {
-        if (this.OnMouseUp(sender, e, ve)) {
-            return true;
-        }
-        if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
-            this.DesignMode = false;
-            ve.NeedRePaint = true;
-        }
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayMouseMove(sender, e, ve) {
-        if (this.OnMouseMove(sender, e, ve)) {
+    OnMouseMove(sender, e, ve) {
+        if (this.DoMouseMove(sender, e, ve)) {
             return true;
         }
         if (this.DesignMode) {
+            let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+            this.Width = pt.X - this.Left;
+            this.Height = pt.Y - this.Top;
             ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            return true;
         }
-        this.lastpoint = new Point(ve.offsetX, ve.offsetY);
-        return false;
-    }
-    OnDisplayMouseDoubleClick(sender, e, ve) {
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayKeyPress(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchStart(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchEnd(sender, e, ve) {
         return false;
     }
 }
 class DisplayableText extends Displayable {
     constructor() {
         super();
-        this._PointStart = null;
-        this._PointEnd = null;
-        this.DesignMode = false;
-        this.lastpoint = null;
-        this._Text = "";
         this._Animation = true;
+        this._Text = "";
+        this.init = true;
         let style = {
             option: {
                 rotation: 0,
@@ -11346,42 +11090,19 @@ class DisplayableText extends Displayable {
                     boxShadowOffsetY: 10
                 }
             },
-            animate: [{
-                    type: "style",
-                    interval: 3000,
-                    value: {
-                        textShadowBlur: 15,
-                        textShadowColor: "white",
-                    }
+            animate: [
+                {
+                    type: "style", interval: 3000, value: { textShadowBlur: 15, textShadowColor: "white", borderColor: 'white', },
+                    animate: { type: "style", interval: 6000, value: { textShadowBlur: 15, textShadowColor: "#ffe", borderColor: '#112233', } }
                 }
             ]
         };
         this._Style = style;
-        this._Text = "";
+        this.Width = 200;
+        this.Height = 30;
     }
     get TypeName() {
-        return DisplayableBuild.rect;
-    }
-    get PointStart() {
-        return this._PointStart;
-    }
-    set PointStart(value) {
-        this._PointStart = value;
-    }
-    get PointEnd() {
-        return this._PointEnd;
-    }
-    set PointEnd(value) {
-        if (this._PointEnd != null) {
-            return;
-        }
-        this._PointEnd = value;
-    }
-    get Text() {
-        return this._Text;
-    }
-    set Text(value) {
-        this._Text = value;
+        return DisplayableBuild.text;
     }
     get Animation() {
         return this._Animation;
@@ -11389,23 +11110,17 @@ class DisplayableText extends Displayable {
     set Animation(value) {
         this._Animation = value;
     }
+    get Text() {
+        return this._Text;
+    }
+    set Text(value) {
+        this._Text = value;
+    }
     get Style() {
         return this._Style;
     }
     set Style(value) {
         this._Style = value;
-    }
-    get OrgWidth() {
-        return this._OrgWidth;
-    }
-    set OrgWidth(value) {
-        this._OrgWidth = value;
-    }
-    get OrgHeight() {
-        return this._OrgHeight;
-    }
-    set OrgHeight(value) {
-        this._OrgHeight = value;
     }
     GetData() {
         let data = {
@@ -11420,11 +11135,7 @@ class DisplayableText extends Displayable {
             backimageimagelayout: this.BackImageImageLayout,
             style: this.Style,
             animation: this.Animation,
-            orgwidth: this.OrgWidth,
-            orgheight: this.OrgHeight,
             text: this.Text,
-            pointstart: [this.PointStart.X, this.PointStart.Y],
-            pointend: [this.PointEnd.X, this.PointEnd.Y],
         };
         return data;
     }
@@ -11439,122 +11150,56 @@ class DisplayableText extends Displayable {
         this.BackImageImageLayout = data.backimageimagelayout;
         this.Style = data.style;
         this.Animation = data.animation;
-        this.OrgWidth = data.orgwidth;
-        this.OrgHeight = data.orgheight;
         this.Text = data.text;
-        this.PointStart = new Point(data.pointstart[0], data.pointstart[1]);
-        this.PointEnd = new Point(data.pointend[0], data.pointend[1]);
     }
-    OnDisplayDraw(sender, g) {
-        if (this.OnDraw(sender, g)) {
-            return true;
-        }
-        return false;
-    }
-    OnDisplayDrawBack(sender, g) {
+    OnDrawBack(sender, g) {
         try {
-            if (this.OnDrawBack(sender, g)) {
+            if (this.DoDrawBack(sender, g)) {
                 return true;
             }
             if (this.Selected) {
                 g.FillRect(Palette.A3399FF80, this.Left, this.Top, this.Width, this.Height);
             }
-            if (this.PointStart == null)
-                return false;
-            let zoomx = this.Primitive.Width / this.OrgWidth;
-            let zoomy = this.Primitive.Height / this.OrgHeight;
-            let x1 = Math.round((this.PointStart.X * zoomx + this.Primitive.Left));
-            let y1 = Math.round((this.PointStart.Y * zoomy + this.Primitive.Top));
-            let x2 = x1;
-            let y2 = y1;
-            if (this.PointEnd != null) {
-                x2 = Math.round((this.PointEnd.X * zoomx + this.Primitive.Left));
-                y2 = Math.round((this.PointEnd.Y * zoomy + this.Primitive.Top));
-            }
-            else {
-                if (this.DesignMode) {
-                    if (this.lastpoint != null) {
-                        x2 = Math.round((this.lastpoint.X * zoomx + this.Primitive.Left));
-                        y2 = Math.round((this.lastpoint.Y * zoomy + this.Primitive.Top));
-                    }
-                }
-            }
-            let w1 = x2 - x1;
-            let h1 = y2 - y1;
-            this.Style.option.position = [x1, y1];
+            this.Style.option.position = [this.Left, this.Top];
             this.Style.option.style.text = this.Text;
-            g.DrawPrimitiveText(this.Style, false); // this.Animation); 
+            g.DrawPrimitiveText(this.Style, true); // this.Animation); 
         }
         catch (e) {
-            DataExcelConsole.log("DisplayableLine OnDisplayDrawBack", e);
+            DataExcelConsole.log("DisplayableCircle OnDrawBack", e);
         }
         return false;
     }
-    OnDisplayMouseDown(sender, e, ve) {
-        if (this.OnMouseDown(sender, e, ve)) {
+    OnMouseDown(sender, e, ve) {
+        if (this.DoMouseDown(sender, e, ve)) {
+            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
             return true;
         }
-        if (!this.Primitive.Rect.Contains(ve.Point)) {
+        let pt = new Point(ve.offsetPoint.X, ve.offsetPoint.Y);
+        if (!this.Primitive.Rect.Contains(ve.offsetPoint)) {
             this.DesignMode = false;
             return false;
         }
-        if (this.PointStart == null) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointStart = (pt);
-            this.DesignMode = true;
-            this.lastpoint = null;
+        if (this.init) {
+            this.Left = pt.X;
+            this.Top = pt.Y;
             ve.NeedRePaint = true;
-            return true;
-        }
-        if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
-            this.DesignMode = false;
-            ve.NeedRePaint = true;
+            ve.CurrentEvent = this;
+            this.init = false;
             return true;
         }
         return false;
     }
-    OnDisplayMouseUp(sender, e, ve) {
-        if (this.OnMouseUp(sender, e, ve)) {
+    OnMouseUp(sender, e, ve) {
+        if (this.DoMouseUp(sender, e, ve)) {
             return true;
         }
-        if (this.DesignMode) {
-            let pt = new Point(ve.offsetX, ve.offsetY);
-            this.PointEnd = pt;
-            this.DesignMode = false;
-            ve.NeedRePaint = true;
-        }
-        this.DesignMode = false;
         return false;
     }
-    OnDisplayMouseMove(sender, e, ve) {
-        if (this.OnMouseMove(sender, e, ve)) {
+    OnMouseMove(sender, e, ve) {
+        if (this.DoMouseMove(sender, e, ve)) {
             return true;
         }
-        if (this.DesignMode) {
-            ve.NeedRePaint = true;
-        }
-        this.lastpoint = new Point(ve.offsetX, ve.offsetY);
-        return false;
-    }
-    OnDisplayMouseDoubleClick(sender, e, ve) {
-        this.DesignMode = false;
-        return false;
-    }
-    OnDisplayKeyPress(sender, e, ve) {
-        return false;
-    }
-    OnDisplayKeyDown(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchStart(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchMove(sender, e, ve) {
-        return false;
-    }
-    OnDisplayTouchEnd(sender, e, ve) {
         return false;
     }
 }
@@ -11648,8 +11293,8 @@ class MoveView {
     }
     OnMouseMove(sender, e, ve) {
         if (this.StateMode == StateMode.MOVE) {
-            let x = ve.Point.X - this.MouseDownPoint.X;
-            let y = ve.Point.Y - this.MouseDownPoint.Y;
+            let x = ve.offsetPoint.X - this.MouseDownPoint.X;
+            let y = ve.offsetPoint.Y - this.MouseDownPoint.Y;
             this.Left = this.Left + x;
             this.Top = this.Top + y;
             return true;
@@ -11764,8 +11409,8 @@ class ReSizeView {
     }
     OnMouseMove(sender, e, ve) {
         if (this.StateMode == StateMode.MOVE) {
-            let x = ve.Point.X - this.MouseDownPoint.X;
-            let y = ve.Point.Y - this.MouseDownPoint.Y;
+            let x = ve.offsetPoint.X - this.MouseDownPoint.X;
+            let y = ve.offsetPoint.Y - this.MouseDownPoint.Y;
             this.Left = this.Left + x;
             this.Top = this.Top + y;
             return true;
@@ -11791,8 +11436,8 @@ class ReSizeView {
         return false;
     }
     SetDataExcelMouseDown(ve) {
-        let pt = ve.Point;
-        this.MouseDownPoint = ve.Point;
+        let pt = ve.offsetPoint;
+        this.MouseDownPoint = ve.offsetPoint;
         this.MouseDownsize = new Size(this.Width, this.Height);
         let result = false;
         if (this.TopLeft.Contains(pt)) {
@@ -11830,7 +11475,7 @@ class ReSizeView {
         return result;
     }
     ChangedSize(ve) {
-        let location = ve.Point; // e.Location;
+        let location = ve.offsetPoint; // e.Location;
         let sf = new Size(location.X - this.MouseDownPoint.X, location.Y - this.MouseDownPoint.Y);
         switch (this.SizeChangMode) {
             case SizeChangMode.Null:
