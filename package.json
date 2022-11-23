@@ -1,7 +1,7 @@
 {
-  "name": "zrender",
+  "name": "dataexcel",
   "version": "5.4.0",
-  "description": "A lightweight graphic library providing 2d draw for Apache ECharts",
+  "description": "A lightweight excel",
   "keywords": [
     "canvas",
     "svg",
@@ -11,7 +11,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ecomfe/zrender.git"
+    "url": "https://github.com/yufb12/dataexcel.git"
   },
   "scripts": {
     "prepublish": "npm run release",
@@ -29,7 +29,7 @@
   "license": "",
   "types": "index.d.ts",
   "module": "index.js",
-  "main": "dist/zrender.js",
+  "main": "dist/dataexcel.js",
   "dependencies": {
     "tslib": "2.3.0"
   },
