@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "noImplicitAny": true,
+        "strictBindCallApply": true,
+        "removeComments": true,
+        "sourceMap": false,
+        "suppressImplicitAnyIndexErrors":true,
+        "noImplicitThis": true,
+ 
+        "moduleResolution": "Node",
+
+        "declaration": true,
+        "declarationMap": false,
+ 
+        "rootDir": "src",
+
+        "importHelpers": true,
+
+        "pretty": true
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+    ]
+}

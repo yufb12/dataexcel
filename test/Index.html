@@ -1,0 +1,2806 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="./plus/css/bootstrap.css" rel="stylesheet" />
+    <link href="./plus/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="./plus/jsoneditor/jsoneditor.css" rel="stylesheet" />
+    <title>dataexcel</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .body,
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
+        .DeleteColumn {
+            background: url("./plus/Image/toolicon/insertdel/DeleteColumn.png")no-repeat;
+        }
+
+        .Merge {
+            background: url("./plus/Image/toolicon/cell/Merge_16x16.png")no-repeat;
+        }
+
+        .clear-padding {
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="./plus/js/jquery.min.js"></script>
+    <script src="./plus/js/zrender.js"></script>
+    <!--<script src="./js/zrender.min.js"></script>-->
+    <script src="../dist/dataexcel.js"></script>
+    <script src="./plus/js/bootstrap.js"></script>
+    <script src="./plus/js/jscolor.js"></script>
+    <script src="./plus/js/echarts.min.js"></script>
+    <script src="./plus/js/fjson.js"></script>
+    <script src="./plus/jsoneditor/jsoneditor.js"></script>
+    <script type="text/javascript">
+        jscolor.presets.default = {
+            palette: [
+                '#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26', '#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',
+                '#ffffff', '#c3c3c3', '#b87957', '#feaec9', '#ffc80d', '#eee3af', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',
+            ],
+            //paletteCols: 12,
+            hideOnPaletteClick: true,
+            closeButton: true, closeText: 'OK',
+            alphaChannel: true,
+            //width: 271,
+            //height: 151,
+            //position: 'right',
+            //previewPosition: 'right',
+            //format: ['auto', 'any', 'hex', 'hexa', 'rgb', 'rgba'],
+            //previewPosition: ['left', 'right'],
+            //mode: ['hsv', 'hvs', 'hs', 'hv'],
+            //position: ['left', 'right', 'top', 'bottom'],
+            //alphaChannel: ['auto', true, false],
+            //paletteSetsAlpha: ['auto', true, false],
+            //backgroundColor: 'rgba(51,51,51,1)', controlBorderColor: 'rgba(153,153,153,1)', buttonColor: 'rgba(240,240,240,1)',
+        }
+        function update(picker, selector) {
+            let color = document.getElementById("backcolor").style.backgroundColor;
+            try {
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                grid.CommandBackGroudColor(color);
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+
+            }
+
+        }
+        function update2(picker, selector) {
+            let color = document.getElementById("backcolor").style.backgroundColor;
+            try {
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                grid.CommandForeColor(color);
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+
+            }
+
+        }
+        function update3(picker, selector) {
+            try {
+                let chart = grid.GetSelectChart();
+                if (chart == null)
+                    return;
+                let domchartbackcolor = document.getElementById("chartbackcolor");
+                let cha = picker.channels.a;
+                let chr = picker.channels.r;
+                let chg = picker.channels.g;
+                let chb = picker.channels.b;
+                let color = 'rgba(' + chr + ',' + chg + ',' + chb + ',' + cha + ')';
+                //let chart = grid.NewChart();
+                chart.BackColor = color;
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+                domchartbackcolor.style.backgroundColor = "";
+            } catch (e) {
+
+            }
+
+        }
+    </script>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="btn-toolbar col-md-12" role="toolbar" aria-label="...">
+                <div class="btn-group" role="group" aria-label="...">
+                    <!--文件-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            文件
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="menufile" class="dropdown-menu">
+                            <li onclick="New()"><a href="#">新建(new)</a></li>
+                            <li onclick="Open()"><a href="#">打开(open)</a></li>
+                            <li onclick="Save()"><a href="#">保存(save)</a></li>
+                            <li onclick="OpenDialogSize()"><a href="#">大小(size)</a></li>
+                            <!--<li onclick="Preview()"><a href="#">预览(Preview)</a></li>-->
+                            <li onclick="Preview2()"><a href="#">自适应预览(Preview)</a></li>
+                            <li onclick="Preview2(false)"><a href="#">预览(Preview)</a></li>
+                            <li onclick="GridZoomIn()"><a href="#">缩小(Zoom)</a></li>
+                            <li onclick="GridZoomOut()"><a href="#">放大(Zoom)</a></li>
+                            <li onclick="GridZoomNormal()"><a href="#">恢复(Zoom)</a></li>
+                            <!--<li onclick="Scale()"><a href="#">缩放(Scale)</a></li>
+                        <li onclick="Restore()"><a href="#">恢复(Restore)</a></li>-->
+
+                        </ul>
+
+                    </div>
+                    <!--合并-->
+                    <button type="button" class="btn btn-default fa" title="合并单元格" onclick="Merge()">
+                        合并
+                    </button>
+                    <!--自动换行-->
+                    <button type="button" class="btn btn-default fa " title="自动换行" onclick="MultLine()">
+                        换行
+                    </button>
+                    <!--编辑-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            编辑
+                            <span class="caret"></span>
+                        </button>
+
+                        <ul id="font" class="dropdown-menu">
+
+                            <li onclick="Copy()"><a href="#">复制</a></li>
+                            <li onclick="Paste()"><a href="#">粘贴</a></li>
+                            <li onclick="Cut()"><a href="#">剪切</a></li>
+
+                            <li onclick="PasteStyle()"><a href="#">粘贴样式</a></li>
+
+                            <li onclick="UnMerge()"><a href="#">取合并单元格</a></li>
+
+                            <li
+                                onclick="ShowGridLine(); ShowRowHeader(); ShowColumnHeader(); VScrollVisible(); HScrollVisible(); ShowBorder(); ShowSelectBorder(); LockHeader();">
+                                <a href="#">空白</a>
+                            </li>
+
+                            <li onclick="ShowGridLine()"><a href="#">显示网络线</a></li>
+                            <li onclick="ShowRowHeader()"><a href="#">显示行头</a></li>
+                            <li onclick="ShowColumnHeader()"><a href="#">显示列头</a></li>
+                            <li onclick="LockHeader()" title="不显示行，列头时 占用原有位置 配合底图使用效果好"><a href="#">锁定行列头位置</a></li>
+                            <li onclick="VScrollVisible()"><a href="#">垂直滚动条</a></li>
+                            <li onclick="HScrollVisible()"><a href="#">水平滚动条</a></li>
+                            <li onclick="ShowBorder()"><a href="#">边框</a></li>
+                            <li onclick="ShowSelectBorder()"><a href="#">显示选择框</a></li>
+
+                            <li onclick="DefaultColumnWidth()" title="和新建接合使用"><a href="#">列宽20</a></li>
+
+                            <li onclick="GridBackImage()"><a href="#">背景图片</a></li>
+                            <li onclick="GridBackImageLayoutNone()"><a href="#">背景图片布局空</a></li>
+                            <li onclick="GridBackImageLayoutStretch()"><a href="#">背景图片布局-伸缩</a></li>
+                            <li onclick="GridBackImageLayoutZoom()"><a href="#">背景图片布局-放大</a></li>
+
+                            <li onclick="TestBackImage()"><a href="#">单元格背景图片</a></li>
+                            <li onclick="ImageLayoutNone()"><a href="#">单元格背景图片布局空</a></li>
+                            <li onclick="ImageLayoutStretch()"><a href="#">单元格背景图片布局-伸缩</a></li>
+                            <li onclick="ImageLayoutZoom()"><a href="#">单元格背景图片布局-放大</a></li>
+                            <li onclick="ImageLayoutClip()"><a href="#">单元格背景图片布局-原图裁切</a></li>
+                            <li onclick="ImageLayoutZoomClip()"><a href="#">单元格背景图片布局-缩放截切</a></li>
+                            <li onclick="ReadOnly()"><a href="#">只读(readonly)</a></li>
+                            <li onclick="UnReadOnly()"><a href="#">取消只读(readonly)</a></li>
+                        </ul>
+                    </div>
+                    <!--背景色-->
+                    <button type="button" class="btn btn-default fa" title="背景色">
+                        <span id="backcolor" data-jscolor="{
+			onChange: 'update(this)',
+			onInput: 'update(this)' }" style="background-color: rgba(165, 42, 42, 1); ">口</span>
+
+                    </button>
+                    <!--前景色-->
+                    <button type="button" class="btn btn-default fa" title="前景色">
+                        <span id="backcolor" data-jscolor="{
+			onChange: 'update2(this)',
+			onInput: 'update2(this)' }" style="background-color: rgba(165, 42, 42, 1); ">A</span>
+
+                    </button>
+                    <!--字体-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            字体
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="font" class="dropdown-menu">
+                            <li id="font1"><a href="#">Helvetica</a></li>
+                            <li><a href="#">Arial</a></li>
+                            <li><a href="#">Lucida Grande</a></li>
+                            <li><a href="#">Verdana</a></li>
+                            <li><a href="#">Tahoma</a></li>
+                            <li><a href="#">Trebuchet MS</a></li>
+                            <li><a href="#">Georgia</a></li>
+                            <li><a href="#">Times</a></li>
+                            <li><a href="#">中易宋体</a></li>
+                            <li><a href="#">微软雅黑</a></li>
+                            <li><a href="#">华文细黑</a></li>
+                            <li><a href="#">Georgia</a></li>
+                            <li><a href="#">Impact</a></li>
+                            <li><a href="#">Verdana</a></li>
+                            <li><a href="#">宋体</a></li>
+                            <li><a href="#">黑体</a></li>
+                            <li><a href="#">Comic Sans MS</a></li>
+                            <li><a href="#">Time News Roman</a></li>
+
+                        </ul>
+                    </div>
+                    <!--字体大小-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            大小
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="fontsize" class="dropdown-menu">
+                            <li id="font1"><a href="#">Helvetica</a></li>
+                            <li><a href="#">12px</a></li>
+                            <li><a href="#">14px</a></li>
+                            <li><a href="#">16px</a></li>
+                            <li><a href="#">18px</a></li>
+                            <li><a href="#">20px</a></li>
+                            <li><a href="#">22px</a></li>
+                            <li><a href="#">24px</a></li>
+                            <li><a href="#">26px</a></li>
+                            <li><a href="#">28px</a></li>
+                            <li><a href="#">30px</a></li>
+                            <li><a href="#">32px</a></li>
+                            <li><a href="#">34px</a></li>
+                            <li><a href="#">36px</a></li>
+                            <li><a href="#">50px</a></li>
+                            <li><a href="#">72px</a></li>
+
+                        </ul>
+                        <button id="fontsizeadd" type="button" class="btn btn-default fa" title="+">+</button>
+                        <button id="fontsizeminus" type="button" class="btn btn-default fa" title="-">-</button>
+                    </div>
+                    <!--字体样式-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            样式
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="fontstyle" class="dropdown-menu">
+                            <li onclick="SetFontStyle('normal')"><a href="#">normal</a></li>
+                            <li onclick="SetFontStyle('italic')"><a href="#">italic</a></li>
+                            <li onclick="SetFontStyle('bold')"><a href="#">bold</a></li>
+                            <li onclick="SetStyleTextPadding()"><a href="#">文字内边距 TextPadding</a></li>
+                            <li onclick="SetStyleTextBorder()"><a href="#">文字内边框 TextBorder</a></li>
+                            <li onclick="SetStyleTextBackgroundColor()"><a href="#">文字内背景 TextBackgroundColor</a></li>
+                            <li onclick="SetStyleTextShadow()"><a href="#">文字阴影 TextShadow</a></li>
+                        </ul>
+                    </div>
+                    <!--单元格 格式-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            格式
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li title="年月日 yyyy-MM-dd"><a class="fa  " onclick="FormatDate()">年月日</a></li>
+                            <li title="时分秒 HH:mm:ss"><a class="fa  " onclick="FormatTime()">时分秒</a></li>
+                            <li title="年月日时分秒 yyyy-MM-dd  HH:mm:ss"><a class="fa  "
+                                    onclick="FormatDateTime()">年月日时分秒</a>
+                            </li>
+
+                            <li title="百分比"><a class="fa  " onclick="FormatPercentage()">百分比</a></li>
+                            <li title="增加小数位"><a class="fa  " onclick="FormatDecimalsAdd()">增加小数位</a></li>
+                            <li title="减少小数位"><a class="fa  " onclick="FormatDecimalsIndent()">减少小数位</a></li>
+                            <li title="两位小数"><a class="fa  " onclick="FormatDecimals2()">两位小数</a></li>
+                            <li title="一位小数"><a class="fa  " onclick="FormatDecimals1()">一位小数</a></li>
+                            <li title="三位小数"><a class="fa  " onclick="FormatDecimals3()">三位小数</a></li>
+                            <li title="清除格式"><a class="fa  " onclick="FormatClear()">三位小数</a></li>
+
+                            <li title="显示"><a class="fa  " onclick="CellVisable()">显示(单元格对用户是否可见)</a></li>
+                        </ul>
+                    </div>
+                    <!--单元格 边框-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            边框
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="cellborder" class="dropdown-menu">
+                            <li title="all" onclick="SetCellBorder('all')"><a>全部</a></li>
+                            <li title="left" onclick="SetCellBorder('left')"><a>左</a></li>
+                            <li title="right" onclick="SetCellBorder('right')"><a>右</a></li>
+                            <li title="top" onclick="SetCellBorder('top')"><a>上</a></li>
+                            <li title="bottom" onclick="SetCellBorder('bottom')"><a>下</a></li>
+
+                            <li title="all" onclick="ClearCellBorder('all')"><a>清除所有边框</a></li>
+                            <li title="left" onclick="ClearCellBorder('left')"><a>清除左边框</a></li>
+                            <li title="right" onclick="ClearCellBorder('right')"><a>清除右边框</a></li>
+                            <li title="top" onclick="ClearCellBorder('top')"><a>清除上边框</a></li>
+                            <li title="bottom" onclick="ClearCellBorder('bottom')"><a>清除下边框</a></li>
+                        </ul>
+                    </div>
+                    <!--文字对齐-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            对齐
+                            <span class="caret"></span>
+                        </button>
+                        <ul id="textAlign" class="dropdown-menu">
+                            <li title="center" onclick="SetTextAlign('center'); SetTextVerticalAlign('middle');"><a
+                                    class="fa fa-align-center">居中</a></li>
+                            <li title="left" onclick="SetTextAlign('left')"><a class="fa fa-align-left">左对齐</a></li>
+                            <li title="center" onclick="SetTextAlign('center')"><a class="fa fa-align-center">水平居中对齐</a>
+                            </li>
+                            <li title="right" onclick="SetTextAlign('right')"><a class="fa fa-align-right">右对齐</a></li>
+
+                            <li title="top"><a class="fa fa-align-top" onclick="SetTextVerticalAlign('top')">上对齐</a>
+                            </li>
+                            <li title="middle"><a class="fa fa-align-middle"
+                                    onclick="SetTextVerticalAlign('middle')">重直居中对齐</a></li>
+                            <li title="bottom"><a class="fa fa-align-bottom"
+                                    onclick="SetTextVerticalAlign('bottom')">下对齐</a></li>
+                        </ul>
+                    </div>
+                    <!--行列单元格-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            行列单元格
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li title="单元格只读"><a class="fa " onclick="CellReadOnly()">单元格只读</a></li>
+                            <li title="单元格取消只读"><a class="fa " onclick="CellUnReadOnly()">单元格取消只读</a></li>
+
+                            <li title="隐藏行"><a class="fa  " onclick="HideRow()">隐藏行</a></li>
+                            <li title="隐藏列"><a class="fa  " onclick="HideColumn()">隐藏列</a></li>
+                            <li title="显示行"><a class="fa  " onclick="ShowRow()">显示行</a></li>
+                            <li title="显示列"><a class="fa  " onclick="ShowColumn()">显示列</a></li>
+                            <li title="冻结行"><a class="fa  " onclick="FrozenRow()">冻结行</a></li>
+                            <li title="冻结列"><a class="fa  " onclick="FrozenColumn()">冻结列</a></li>
+                            <li title="冻结单元格"><a class="fa  " onclick="FrozenCell()">冻结单元格</a></li>
+
+                            <li title="删除行"><a class="fa  " onclick="DeleteRow()">删除行</a></li>
+                            <li title="删除列"><a class="fa  " onclick="DeleteColumn()">删除列</a></li>
+                            <li title="插入行"><a class="fa  " onclick="InsertRow()">插入行</a></li>
+                            <li title="插入列"><a class="fa  " onclick="InsertColumn()">插入列</a></li>
+                            <li title="插入单元格右移"><a class="fa " onclick="InsertCellColumn()">插入单元格右移</a></li>
+                            <li title="插入单元格下移"><a class="fa " onclick="InsertCellRow()">插入单元格下移</a></li>
+                            <li title="删除单元格左移"><a class="fa " onclick="DeleteCellColumn()">删除单元格左移</a></li>
+                            <li title="删除单元格上移"><a class="fa " onclick="DeleteCellRow()">删除单元格上移</a></li>
+                        </ul>
+                    </div>
+
+                    <!--背景单元格-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            背景单元格
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li title="设置背景单元格"><a class="fa" onclick="BackCellNew(); BackCellImage();">设置背景单元格</a></li>
+                            <li title="取消背景单元格"><a class="fa" onclick="BackCellCancel()">取消背景单元格</a></li>
+                            <li title="背景单元格图片"><a class="fa" onclick="BackCellImage()">背景单元格图片</a></li>
+                            <li title="背景单元格颜色"><a class="fa" onclick="BackCellColor()">背景单元格颜色</a></li>
+
+                        </ul>
+                    </div>
+
+                    <!--图表-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            图表(chart)
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li title="新建图表(NewChart)"><a class="fa" onclick="NewChart(); ">新建图表</a></li>
+
+                            <li title="图表样式" data-toggle="modal" data-target="#myModal" onclick="SetChartData();"><a
+                                    class="fa">图表数据</a></li>
+                            <li title="图表样式" data-toggle="modal" data-target="#modalchartstyle"
+                                onclick="SetChartStyle()"><a class="fa">图表样式</a></li>
+
+                            <li title="图表背景色" data-toggle="modal">
+                                <a id="chartbackcolor" data-jscolor="{
+			onChange: 'update3(this)',
+			onInput: 'update3(this)' }">背景颜色</a>
+                            </li>
+                            <li title="图表背景图片" data-toggle="modal" onclick="ChartBackImage();"><a class="fa">图表背景图片</a>
+                            </li>
+                            <li title="删除图表(ChartRemove)"><a class="fa" onclick="ChartRemove(); ">删除图表</a></li>
+                            <li title="新建仪表盘(NewChartGauge)"><a class="fa" onclick="NewChartGauge(); ">新建仪表盘</a></li>
+                            <li title="新建柱图(NewChartBar)"><a class="fa" onclick="NewChartBar(); ">新建柱图</a></li>
+                            <li title="新建饼图(NewChartPie)"><a class="fa" onclick="NewChartPie(); ">新建饼图</a></li>
+                            <li title="新建折线图(NewChartLine)"><a class="fa" onclick="NewChartLine(); ">新建折线图</a></li>
+                            <li title="新建面积图(NewChartArea)"><a class="fa" onclick="NewChartArea(); ">新建面积图</a></li>
+                            <li title="新建散点图(NewChartScatter)"><a class="fa" onclick="NewChartScatter(); ">新建散点图</a>
+                            </li>
+                            <li title="新建雷达图(NewChartRadar)"><a class="fa" onclick="NewChartRadar(); ">新建雷达图</a></li>
+                            <li title="新建盒须图(NewChartBoxplot)"><a class="fa" onclick="NewChartBoxplot(); ">新建盒须图</a>
+                            </li>
+                            <li title="新建热力图(NewChartHeatmap)"><a class="fa" onclick="NewChartHeatmap(); ">新建热力图</a>
+                            </li>
+                            <li title="新建漏斗图(NewChartFunnel)"><a class="fa" onclick="NewChartFunnel(); ">新建漏斗图</a></li>
+                            <li title="更多图表(MoreChartes)"><a class="fa"
+                                    href="https://echarts.apache.org/examples/zh/index.html#chart-type-pie"
+                                    target="_blank">更多图表</a></li>
+                        </ul>
+                    </div>
+
+                    <!--图元-->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default fa dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            图元(primitive)
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li title="新建图元(New)"><a class="fa" onclick="NewPrimitive(); ">新建图元</a></li>
+                            <li title="删除图元" onclick="PrimitiveRemove()"><a class="fa">删除图元</a></li>
+
+                            <li title="图元样式" data-toggle="modal" data-target="#modalchartstyle"
+                                onclick="PrimitiveStyle()">
+                                <a class="fa">图表图元</a>
+                            </li>
+
+                            <li title="图元背景色" data-toggle="modal">
+                                <a id="chartbackcolor" data-jscolor="{
+			onChange: 'update3(this)',
+			onInput: 'update3(this)' }">图元背景颜色</a>
+                            </li>
+                            <li title="图元背景图片" data-toggle="modal" onclick="PrimitiveBackImage();"><a
+                                    class="fa">图元背景图片</a>
+                            </li>
+                            <li title="新建图元-线"><a class="fa" onclick="NewDiaplayLine(); ">新建图元-线</a></li>
+                            <li title="新建图元-矩形"><a class="fa" onclick="NewDiaplayRect(); ">新建图元-矩形</a></li>
+                            <li title="新建图元-文字"><a class="fa" onclick="NewDiaplayText(); ">新建图元-文字</a></li>
+                            <li title="新建图元-圆"><a class="fa" onclick="NewDiaplayCircle(); ">新建图元-圆</a></li>
+                            <li title="新建图元-图片"><a class="fa" onclick="NewDisplayableImage(); ">新建图元-图片</a></li>
+                            <li title="新建图元-多边形"><a class="fa" onclick="NewDisplayablePolygon(); ">新建图元-多边形</a></li>
+                            <li title="新建图元-扇形"><a class="fa" onclick="NewDisplayableSector(); ">新建图元-扇形</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row navbar-fixed-bottom">
+            <div>
+                <a href="./plus/Image/about/wechat.jpg" target="_blank">
+                    <img width="72" height="72" src="./plus/Image/about/wechat.jpg" style="display:block" />
+                </a>
+
+                <div style="visibility:hidden ;">
+                    <!-- <iframe src="image.aspx"></iframe> -->
+                </div>
+
+            </div>
+            <div>
+                <span> dataexcel Version:1.0.2.11 </span> <span> 更新时间:2022-10-11 </span>
+                <a href="../dist/dataexcel.min.js" target="_blank"> download</a>
+                <a href="https://github.com/yufb12/dataexcel/blob/main/home.html" target="_blank"> API</a>
+                <a href="https://github.com/yufb12/dataexcel" target="_blank">git demo</a>
+                <a href="">.net 版 excel控件</a>
+                <a>excel服务器</a>
+                <a>.net即时通讯框架</a>
+                <a>js json库</a>
+                <a>js 工式执行工具</a>
+                <a>小工具</a>
+                <a>模拟鼠标键盘</a>
+                <a>窗口管理(一键隐藏关闭窗口)</a>
+                <a>无打扰英语学习</a>
+            </div>
+            <div>
+
+            </div>
+        </div>
+        <div id="maingrid" class="row">
+            <div class="col-md-10">
+                <div id="grid" style="width: 100%;"> </div>
+            </div>
+            <div class="col-md-2">
+                <div id="txtjsonedit" style="width: 100%;"></div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Button trigger modal -->
+            <!--<button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                Launch demo modal
+            </button>-->
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">图表样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="" role="search">
+                                <div class="form-group">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">数据</div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-lg-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">
+                                                            样式
+                                                        </span>
+                                                        <input type="text" class="form-control" list="test" id="test2"
+                                                            value='0.3' onfocus="this.value=''">
+                                                        <datalist id="test">
+                                                            <option value="0.3">0.3</option>
+                                                            <option value="0.2">0.2</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </datalist>
+                                                    </div><!-- /input-group -->
+                                                </div><!-- /.col-lg-6 -->
+                                                <div class="col-lg-9">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">
+                                                            数据
+                                                        </span>
+                                                        <input type="text" class="form-control" aria-label="...">
+                                                    </div><!-- /input-group -->
+                                                </div><!-- /.col-lg-6 -->
+                                            </div><!-- /.row -->
+                                        </div>
+                                    </div>
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">Panel heading without title</div>
+                                        <div class="panel-body">
+                                            <textarea class="form-control" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--chartstyle-->
+            <div class="modal fade" id="modalchartstyle" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">图表样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="txtchartstyle" class="form-control" rows="9"></textarea>
+                            <a href="https://echarts.apache.org/examples/zh/index.html" target="_blank">echarts simple
+                                示例;</a>
+                            <a href="https://echarts.apache.org/examples/zh/editor.html?c=line-simple"
+                                target="_blank">echarts 编辑 </a>
+                            <a href="https://echarts.apache.org/zh/option.html#series-line" target="_blank">echarts
+                                option 选项</a>
+                            <a href="https://www.bejson.com/json/format/" target="_blank">json编辑器 选项</a>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary"
+                                onclick="$('#modalchartstyle').modal('hide'); SaveChartStyle();">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--宽度、高度-->
+            <div caption="宽度" class="modal fade" id="modaldomwidthheight" tabindex="-1" role="dialog"
+                aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">表格大小</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            宽:
+                                        </span>
+                                        <input id="gridwidth" type="text" class="form-control" aria-label="...">
+                                    </div><!-- /input-group -->
+                                </div><!-- /.col-lg-6 -->
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            高:
+                                        </span>
+                                        <input id="gridheight" type="text" class="form-control" aria-label="...">
+                                    </div><!-- /input-group -->
+                                </div><!-- /.col-lg-6 -->
+                            </div><!-- /.row -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary"
+                                onclick="$('#modaldomwidthheight').modal('hide'); SaveGridSize();">保存(Save)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--celltextstyle-->
+            <div class="modal fade" id="modalcelltextstyle" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">单元格扩展样式</h4>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="txtchartstyle" class="form-control" rows="9">
+style = {  
+            fill: '#ffe', 
+            font: '18px Arial', 
+            padding: [10, 20, 30, 140],
+            backgroundColor: 'rgba(124, 0, 123, 0.4)',
+            borderColor: '#112233',
+            borderWidth: 2,
+            borderRadius: 5,
+            textShadowBlur: 2,
+            textShadowColor: '#893e95',
+            textShadowOffsetX: 2,
+            textShadowOffsetY: 14,
+            boxShadowBlur: 5,
+            boxShadowColor: '#ffe',
+            boxShadowOffsetX: 5,
+            boxShadowOffsetY: 10
+
+        }
+
+</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary"
+                                onclick="$('#modalcelltextstyle').modal('hide'); SaveCellStyle();">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <textarea id="maininput"
+                style="visibility:hidden; position:absolute;z-index:99;left:100px;top:100px;width:100px;"></textarea>
+            <!--<div style=" width: 100%; height: 100%; ">
+            <textarea id="file"
+                      style=" position:absolute;z-index:99;left:100px;top:100px;width:100px;"></textarea>
+        </div>-->
+        </div>
+    </div>
+    <!--Init-->
+    <script type="text/javascript">
+        var domgrid = document.getElementById("grid");
+        var input = document.getElementById("maininput");
+        var grid = new dataexcel.DataExcel();
+        $(document).ready(function () {
+ 
+            grid.InitDom(domgrid);
+            grid.InitEdit(input);
+            grid.Refresh();
+            grid.Paint();
+            grid.On(dataexcel.Events.FocusedCellChanged, FocusedCellChanged);
+            grid.On(dataexcel.Events.SelectChanged, SelectChanged);
+            ajaxdata();
+        });
+
+        function FocusedCellChanged(args) {
+            console.log("事件触发测试:" + args);
+        }
+        let selectplus = null;
+        function SelectChanged(args) {
+            console.log("事件触发测试:" + args);
+            if (args[1]) {
+                let json = args[1].DSC;
+                jsonedit.set(json);
+                selectplus = args[1];
+            }
+        }
+
+        let jsonedit = null;
+        initjsonedit();
+        function initjsonedit() {
+            const container = document.getElementById('txtjsonedit')
+
+            const options = {
+                mode: 'code',
+                modes: ['text', 'code'],
+                onChange: function () {
+                    try {
+                        jschanged();
+                    } catch (e) {
+                        DataExcelConsole.log("initjsonedit", e);
+                    }
+                },
+            }
+
+            const json = {
+                "array": [1, 2, 3],
+                "boolean": true,
+                "null": null,
+                "number": 123,
+                "object": { "a": "b", "c": "d" },
+                "string": "Hello World"
+            }
+
+            const editor = new JSONEditor(container, options, json);
+            jsonedit = editor;
+
+        }
+
+        function jschanged() {
+            DataExcelConsole.log("jschanged", "jschanged");
+            if (selectplus) {
+                if (selectplus.DSC) {
+                    selectplus.DSC = jsonedit.get();
+                    selectplus.Refresh();
+                }
+            }
+        }
+
+    </script>
+    <!--File-->
+    <script type="text/javascript">
+        function New() {
+            grid.Clear();
+            grid.VScroll.Visible = true;
+            grid.HScroll.Visible = true;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Open() {
+            let inputObj = document.createElement('input')
+            inputObj.setAttribute('id', '_ef');
+            inputObj.setAttribute('type', 'file');
+            inputObj.setAttribute("style", 'visibility:hidden');
+            document.body.appendChild(inputObj);
+            inputObj.addEventListener("change", fileopen)
+            //inputObj. = fileopen()
+            inputObj.click();
+        }
+        function fileopen(e) {
+            let inputObj = e.target;
+            let file = inputObj.files[0];
+            console.log(file);
+            grid.OpenFile(file);
+
+            document.body.removeChild(inputObj);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Save() {
+            //let domfile = document.getElementById("file");
+            let content = JSON.stringify(grid.GetData());
+            //domfile.innerText = content;
+            let fileName = "grid.json";
+            let downLink = document.createElement('a')
+            downLink.download = fileName
+            let blob = new Blob([content], { type: 'text/json' })
+            downLink.href = URL.createObjectURL(blob)
+            document.body.appendChild(downLink)
+            downLink.click()
+            document.body.removeChild(downLink)
+        }
+        function OpenDialogSize() {
+            //let dialog = document.getElementById("modaldomwidthheight");
+            //dialog.modal({
+            //    keyboard: false
+            //});
+            let domwidth = document.getElementById("gridwidth");
+            let width = grid.Width;
+            let domheight = document.getElementById("gridheight");
+            let height = grid.Height;
+            domwidth.value = width;
+            domheight.value = height;
+            $('#modaldomwidthheight').modal({
+                keyboard: false
+            })
+        }
+        function SaveGridSize() {
+            let domwidth = document.getElementById("gridwidth");
+            let width = Number(domwidth.value);
+            let domheight = document.getElementById("gridheight");
+            let height = Number(domheight.value);
+            grid.SetSize(width, height);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Preview() {
+            let key = (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16);
+            let arg = "?k=" + key + "&zoom=true";
+            let content = JSON.stringify(grid.GetData());
+            localStorage.setItem(key, content);
+            window.open("demo.html" + arg);
+
+        }
+        function Preview2() {
+            let key = (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16) +
+                (Math.round(Math.random() * 65536)).toString(16);
+            let arg = "?k=" + key + "&zoom2=true";
+            let content = JSON.stringify(grid.GetData());
+            localStorage.setItem(key, content);
+            window.open("demo.html" + arg);
+            //window.location.href = "demo.html" + arg;
+        }
+        function Scale() {
+            var zw = 0.7;
+            var zh = 0.7;
+            document.body.style.transformOrigin = '0 0';
+            document.body.style.transform = 'scale(' + zw + ',' + zh + ')';
+            document.body.style.width = window.innerWidth / zw + 'px';
+            document.body.style.height = window.innerHeight / zh + 'px';
+            grid.SetSize(grid.Width, grid.Height);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function Restore() {
+            var zw = 1;
+            var zh = 1;
+            document.body.style.transformOrigin = '0 0';
+            document.body.style.transform = 'scale(' + zw + ',' + zh + ')';
+            document.body.style.width = window.innerWidth / zw + 'px';
+            document.body.style.height = window.innerHeight / zh + 'px';
+            grid.SetSize(grid.Width, grid.Height);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function GridZoomOut() {
+            var zw = 1.5;
+            let zoom = {
+                Width: zw,
+                Height: zw
+            }
+            grid.SetZoom(zoom);
+
+            grid.Refresh();
+            grid.RePaint();
+            grid.Charts.Refresh();
+        }
+
+        function GridZoomIn() {
+            var zw = 0.7;
+            let zoom = {
+                Width: zw,
+                Height: zw
+            }
+            grid.SetZoom(zoom);
+            grid.Refresh();
+            grid.RePaint();
+            grid.Charts.Refresh();
+        }
+
+
+        function GridZoomNormal() {
+            grid.SetZoomNormal();
+            grid.Refresh();
+            grid.RePaint();
+            grid.Charts.Refresh();
+        }
+        function ReadOnly() {
+            grid.ReadOnly = CheckState.Check;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function UnReadOnly() {
+            grid.ReadOnly = CheckState.UnCheck;
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        var displayData = function (data) {
+            grid.SetData(data);
+            grid.InitChart();
+            grid.RefreshZrender();
+            grid.Refresh();
+            grid.RePaint();
+            grid.Charts.Refresh();
+        }
+         function ajaxdata() {
+            $.ajax({
+                url: "NewIndex.json",
+                type: "GET",
+                dataType: "json",
+                success:
+                    function (data) {
+                        displayData(data)
+                    }
+            });
+        };
+
+    </script>
+    <!--Font-->
+    <script type="text/javascript">
+        let domfont = document.getElementById("font");
+        bingdingclikc();
+        function bingdingclikc() {
+            let ch = domfont.children;
+            for (var i = 0; i < ch.length; i++) {
+                ch[i].addEventListener("click", SetFont);
+            }
+        }
+
+        function SetFont(e) {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontName(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        let domfontsize = document.getElementById("fontsize");
+        domfontsizebingdingclikc();
+        function domfontsizebingdingclikc() {
+            let ch = domfontsize.children;
+            for (var i = 0; i < ch.length; i++) {
+                ch[i].addEventListener("click", SetFontSize);
+            }
+        }
+
+        function SetFontSize(e) {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontSize(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        let domfontsizeadd = document.getElementById("fontsizeadd");
+        domfontsizeadd.addEventListener("click", SetFontSizeAdd);
+        function SetFontSizeAdd(e) {
+            grid.CommandFontSizeAdd(1);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        let domfontsizeminus = document.getElementById("fontsizeminus");
+        domfontsizeminus.addEventListener("click", SetFontSizeMinus);
+        function SetFontSizeMinus(e) {
+            grid.CommandFontSizeAdd(-1);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        //let domfontstyle = document.getElementById("fontstyle");
+        //domfontstylebingdingclikc();
+        //function domfontstylebingdingclikc()
+        //{
+        //    let ch = domfontstyle.children;
+        //    for (var i = 0; i < ch.length; i++)
+        //    {
+        //        ch[i].addEventListener("click", SetFontStyle);
+        //    }
+        //}
+
+        function SetFontStyle(e) {
+            let fontname = e;
+            grid.CommandFontStyle(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetFontWeight(e) {
+            let fontname = e.currentTarget.innerText;
+            grid.CommandFontWeight(fontname);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function SetStyleTextPadding(e) {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                let padding = cell.Style.padding;
+                if (padding == null) {
+                    padding = [10, 10, 10, 10];
+                    cell.Style.padding = padding;
+                }
+                else {
+                    cell.Style.padding = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextBorder(e) {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                let borderColor = cell.Style.borderColor;
+                let borderWidth = cell.Style.borderWidth;
+                let borderRadius = cell.Style.borderRadius;
+                if (borderColor == null) {
+                    borderColor = "#2D88E280";
+                    borderWidth = 2;
+                    borderRadius = 5;
+                    cell.Style.borderColor = borderColor;
+                    cell.Style.borderWidth = borderWidth;
+                    cell.Style.borderRadius = borderRadius;
+                }
+                else {
+                    cell.Style.borderColor = null;
+                    cell.Style.borderWidth = null;
+                    cell.Style.borderRadius = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextBackgroundColor(e) {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                let backgroundColor = cell.Style.backgroundColor;
+                if (backgroundColor == null) {
+                    backgroundColor = "#3194F6C9";
+                    cell.Style.backgroundColor = backgroundColor;
+                }
+                else {
+                    cell.Style.backgroundColor = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetStyleTextShadow(e) {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                let textShadowBlur = cell.Style.textShadowBlur;
+                let textShadowColor = cell.Style.textShadowColor;
+                let textShadowOffsetX = cell.Style.textShadowOffsetX;
+                let textShadowOffsetY = cell.Style.textShadowOffsetY;
+                if (textShadowBlur == null) {
+                    textShadowBlur = 2;
+                    textShadowColor = '#893e95';
+                    textShadowOffsetX = 2;
+                    textShadowOffsetY = 4;
+                    cell.Style.textShadowBlur = textShadowBlur;
+                    cell.Style.textShadowColor = textShadowColor;
+                    cell.Style.textShadowOffsetX = textShadowOffsetX;
+                    cell.Style.textShadowOffsetY = textShadowOffsetY;
+                }
+                else {
+                    cell.Style.textShadowBlur = null;
+                    cell.Style.textShadowColor = null;
+                    cell.Style.textShadowOffsetX = null;
+                    cell.Style.textShadowOffsetY = null;
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SaveCellStyle() {
+
+        }
+    </script>
+
+    <!--Border-->
+    <script type="text/javascript">
+
+
+        function SetCellBorder(border) {
+            grid.CommandCellBorder(border);
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ClearCellBorder(border) {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                switch (border) {
+                    case "left":
+                        cell.LeftLineStyle = null;
+                        break;
+                    case "right":
+                        cell.RightLineStyle = null;
+                        break;
+                    case "top":
+                        cell.TopLineStyle = null;
+                        break;
+                    case "bottom":
+                        cell.BottomLineStyle = null;
+                        break;
+                    case "all":
+                        cell.LeftLineStyle = null;
+                        cell.RightLineStyle = null;
+                        cell.TopLineStyle = null;
+                        cell.BottomLineStyle = null;
+                        break;
+                    default:
+                }
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowGridLine() {
+            grid.ShowGridLine = !grid.ShowGridLine;
+            grid.Refresh();
+            grid.RePaint();
+        }
+    </script>
+
+    <!--Align-->
+    <script type="text/javascript">
+
+        function SetTextAlign(e) {
+            let item = e;//.currentTarget.title;
+            grid.CommandTextAlign(item);
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function SetTextVerticalAlign(e) {
+            let item = e;//.currentTarget.title;
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                cell.Style.verticalAlign = item;
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+    </script>
+
+    <!--Cell Row Column-->
+    <script type="text/javascript">
+        function HideRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++) {
+                        let row = grid.GetRow(i);
+                        row.Visible = false;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function HideColumn() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinColumn();
+                    let max = grid.SelectCells.MaxColumn();
+                    for (var i = min; i <= max; i++) {
+                        let column = grid.GetColumn(i);
+                        column.Visible = false;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function ShowRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++) {
+                        let row = grid.GetRow(i);
+                        row.Visible = true;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function ShowColumn() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinColumn();
+                    let max = grid.SelectCells.MaxColumn();
+                    for (var i = min; i <= max; i++) {
+                        let column = grid.GetColumn(i);
+                        column.Visible = true;
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FrozenRow() {
+            try {
+                if (grid.FocusedCell != null) {
+                    grid.FrozenRow = grid.FocusedCell.Row.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FrozenColumn() {
+            try {
+                if (grid.FocusedCell != null) {
+                    grid.FrozenColumn = grid.FocusedCell.Column.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FrozenCell() {
+            try {
+                if (grid.FocusedCell != null) {
+                    grid.FrozenColumn = grid.FocusedCell.Column.Index;
+                    grid.FrozenRow = grid.FocusedCell.Row.Index;
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function InsertRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++) {
+                        grid.InsertRow(i);
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function InsertColumn() {
+            if (grid.SelectCells != null) {
+                let min = grid.SelectCells.MinColumn();
+                let max = grid.SelectCells.MaxColumn();
+                for (var i = min; i <= max; i++) {
+                    grid.InsertColumn(i);
+                }
+
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function DeleteRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    let min = grid.SelectCells.MinRow();
+                    let max = grid.SelectCells.MaxRow();
+                    for (var i = min; i <= max; i++) {
+                        grid.DeleteRow(i);
+                    }
+
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+
+
+        }
+        function DeleteColumn() {
+            if (grid.SelectCells != null) {
+                let min = grid.SelectCells.MinColumn();
+                let max = grid.SelectCells.MaxColumn();
+                for (var i = min; i <= max; i++) {
+                    grid.DeleteColumn(i);
+                }
+
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function DeleteCellRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    grid.DeleteCellRow(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+
+
+        }
+        function InsertCellRow() {
+            try {
+                if (grid.SelectCells != null) {
+                    grid.InsertCellRow(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+
+
+        }
+        function DeleteCellColumn() {
+            try {
+                if (grid.SelectCells != null) {
+                    grid.DeleteCellColumn(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+
+
+        }
+        function InsertCellColumn() {
+            try {
+                if (grid.SelectCells != null) {
+                    grid.InsertCellColumn(grid.SelectCells);
+                    grid.Refresh();
+                    grid.RePaint();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+
+
+        }
+        function Merge() {
+            if (grid.SelectCells != null) {
+                let mergecell = grid.Merge(grid.SelectCells);
+                console.log(mergecell);
+                grid.FocusedCell = mergecell;
+                grid.SetSelectCells(mergecell.BeginCell, mergecell.EndCell);
+                console.log(grid.SelectCells);
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function UnMerge() {
+            if (grid.SelectCells != null) {
+                grid.UnMerge(grid.SelectCells);
+                grid.RePaint();
+            }
+
+        }
+        function Paste() {
+            if (grid.SelectCells != null) {
+                grid.Paste();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function PasteStyle() {
+            if (grid.SelectCells != null) {
+                grid.PasteStyle();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function Copy() {
+            if (grid.SelectCells != null) {
+                grid.Copy();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+
+        function Cut() {
+            if (grid.SelectCells != null) {
+                grid.Copy();
+                grid.Refresh();
+                grid.RePaint();
+            }
+
+        }
+        function MultLine() {
+            let list = grid.GetSelectCells();
+            for (let i in list) {
+                let cell = list[i];
+                cell.AutoMultiline = !cell.AutoMultiline;
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowRowHeader() {
+            grid.ShowRowHeader = !grid.ShowRowHeader;
+            if (grid.Charts != null) {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function ShowColumnHeader() {
+            grid.ShowColumnHeader = !grid.ShowColumnHeader;
+            if (grid.Charts != null) {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function LockHeader() {
+            //grid.LockColumnHeader = !grid.LockColumnHeader;
+            //grid.LockRowHeader = !grid.LockRowHeader;
+            if (grid.Charts != null) {
+                grid.Charts.Refresh();
+            }
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function VScrollVisible() {
+            grid.VScroll.Visible = !grid.VScroll.Visible;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function HScrollVisible() {
+            grid.HScroll.Visible = !grid.HScroll.Visible;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowBorder() {
+            grid.ShowBorder = !grid.ShowBorder;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ShowSelectBorder() {
+            grid.ShowSelectBorder = !grid.ShowSelectBorder;
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function DefaultColumnWidth() {
+            grid.DefaultColumnWidth = 20;
+
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+        function TestBackImage() {
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.FocusedCell.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImage() {
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutNone() {
+            grid.BackImageImageLayout = ImageLayout.None;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutClip() {
+            grid.BackImageImageLayout = ImageLayout.Clip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutStretch() {
+            grid.BackImageImageLayout = ImageLayout.Stretch;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutZoom() {
+            grid.BackImageImageLayout = ImageLayout.Zoom;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function GridBackImageLayoutZoomClip() {
+            grid.BackImageImageLayout = ImageLayout.ZoomClip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        ///
+
+        function ImageLayoutNone() {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.None;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutClip() {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Clip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutStretch() {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Stretch;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutZoom() {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.Zoom;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        function ImageLayoutZoomClip() {
+            grid.FocusedCell.BackImageImageLayout = ImageLayout.ZoomClip;
+            grid.Refresh();
+            grid.RePaint();
+        }
+        /*      <img src="../Image/test/96434.png" />*/
+    </script>
+
+    <!--Format-->
+    <script type="text/javascript">
+        function CellReadOnly() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.ReadOnly = CheckState.Check;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function CellUnReadOnly() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.ReadOnly = CheckState.UnCheck;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDate() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "yyyy-MM-dd";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatTime() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "HH:mm:ss";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDateTime() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Date;
+                    cell.Format = "yyyy-MM-dd HH:mm:ss";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatMoney() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "¥";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatPercentage() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "00%";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDecimalsAdd() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatDecimalsAdd();
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDecimalsIndent() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatDecimalsIndent();
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDecimals3() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "000";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDecimals2() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "00";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        function FormatDecimals1() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.FormatType = FormatType.Num;
+                    cell.Format = "0";
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+
+        function CellVisable() {
+            try {
+                let list = grid.GetSelectCells();
+                for (let i in list) {
+                    let cell = list[i];
+                    cell.Visible = !cell.Visible;
+                }
+                grid.Refresh();
+                grid.RePaint();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+    </script>
+
+    <!--BackCell-->
+    <script type="text/javascript">
+
+        function BackCellNew() {
+            if (grid.SelectCells != null) {
+                let mergecell = grid.BackCell(grid.SelectCells);
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function BackCellCancel() {
+            if (grid.SelectCells != null) {
+                grid.UnMerge(grid.SelectCells);
+                grid.RePaint();
+            }
+        }
+        function BackCellImage() {
+            if (grid.FocusedCell == null)
+                return;
+            if (grid.FocusedCell.OwnBackCell == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            grid.FocusedCell.OwnBackCell.BackImage = code;
+            grid.Refresh();
+            grid.RePaint();
+        }
+
+    </script>
+    <!--char-->
+    <script type="text/javascript">
+
+        function NewChart() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function SetChartStyle() {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            dom.value = JSON.stringify(chart.DSC.style.option);
+
+        }
+        function SaveChartStyle() {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            try {
+                chart.DSC.style.option = JSON.parse(dom.value);
+            } catch (e) {
+                chart.DSC.style.option = FJson.FJsonParse.Parese(dom.value)
+            }
+            chart.Refresh();
+        }
+        function ChartBackImage() {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            chart.BackImage = code;
+            grid.RePaint();
+        }
+        function ChartRemove() {
+            let chart = grid.GetSelectChart();
+            if (chart == null)
+                return;
+            chart.Clear();
+            grid.Charts.remove(chart);
+            grid.RePaint();
+        }
+
+        function NewChartPie() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: {
+                        text: 'Stacked Line'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: 'Email',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: 'Union Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: 'Video Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: 'Direct',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: 'Search Engine',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [820, 932, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartGauge() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    series: [
+                        {
+                            type: 'gauge',
+                            axisLine: {
+                                lineStyle: {
+                                    width: 30,
+                                    color: [
+                                        [0.3, '#67e0e3'],
+                                        [0.7, '#37a2da'],
+                                        [1, '#fd666d']
+                                    ]
+                                }
+                            },
+                            pointer: {
+                                itemStyle: {
+                                    color: 'auto'
+                                }
+                            },
+                            axisTick: {
+                                distance: -30,
+                                length: 8,
+                                lineStyle: {
+                                    color: '#fff',
+                                    width: 2
+                                }
+                            },
+                            splitLine: {
+                                distance: -30,
+                                length: 30,
+                                lineStyle: {
+                                    color: '#fff',
+                                    width: 4
+                                }
+                            },
+                            axisLabel: {
+                                color: 'auto',
+                                distance: 40,
+                                fontSize: 20
+                            },
+                            detail: {
+                                valueAnimation: true,
+                                formatter: '{value} km/h',
+                                color: 'auto'
+                            },
+                            data: [
+                                {
+                                    value: 70
+                                }
+                            ]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartBar() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    legend: {},
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'Direct',
+                            type: 'bar',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: 'Email',
+                            type: 'bar',
+                            stack: 'Ad',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: 'Union Ads',
+                            type: 'bar',
+                            stack: 'Ad',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: 'Video Ads',
+                            type: 'bar',
+                            stack: 'Ad',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: 'Search Engine',
+                            type: 'bar',
+                            data: [862, 1018, 964, 1026, 1679, 1600, 1570],
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            markLine: {
+                                lineStyle: {
+                                    type: 'dashed'
+                                },
+                                data: [[{ type: 'min' }, { type: 'max' }]]
+                            }
+                        },
+                        {
+                            name: 'Baidu',
+                            type: 'bar',
+                            barWidth: 5,
+                            stack: 'Search Engine',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [620, 732, 701, 734, 1090, 1130, 1120]
+                        },
+                        {
+                            name: 'Google',
+                            type: 'bar',
+                            stack: 'Search Engine',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [120, 132, 101, 134, 290, 230, 220]
+                        },
+                        {
+                            name: 'Bing',
+                            type: 'bar',
+                            stack: 'Search Engine',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [60, 72, 71, 74, 190, 130, 110]
+                        },
+                        {
+                            name: 'Others',
+                            type: 'bar',
+                            stack: 'Search Engine',
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [62, 82, 91, 84, 109, 110, 120]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartLine() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: {
+                        text: 'Stacked Line'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: 'Email',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: 'Union Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: 'Video Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: 'Direct',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: 'Search Engine',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [820, 932, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartArea() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: {
+                        text: 'Stacked Area Chart'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        }
+                    },
+                    legend: {
+                        data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'Email',
+                            type: 'line',
+                            stack: 'Total',
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: 'Union Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: 'Video Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: 'Direct',
+                            type: 'line',
+                            stack: 'Total',
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: 'Search Engine',
+                            type: 'line',
+                            stack: 'Total',
+                            label: {
+                                show: true,
+                                position: 'top'
+                            },
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [820, 932, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartScatter() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    xAxis: {
+                        scale: true
+                    },
+                    yAxis: {
+                        scale: true
+                    },
+                    series: [
+                        {
+                            type: 'effectScatter',
+                            symbolSize: 20,
+                            data: [
+                                [172.7, 105.2],
+                                [153.4, 42]
+                            ]
+                        },
+                        {
+                            type: 'scatter',
+                            // prettier-ignore
+                            data: [[161.2, 51.6], [167.5, 59.0], [159.5, 49.2], [157.0, 63.0], [155.8, 53.6],
+                            [170.0, 59.0], [159.1, 47.6], [166.0, 69.8], [176.2, 66.8], [160.2, 75.2],
+                            [172.5, 55.2], [170.9, 54.2], [172.9, 62.5], [153.4, 42.0], [160.0, 50.0],
+                            [147.2, 49.8], [168.2, 49.2], [175.0, 73.2], [157.0, 47.8], [167.6, 68.8],
+                            [159.5, 50.6], [175.0, 82.5], [166.8, 57.2], [176.5, 87.8], [170.2, 72.8],
+                            [174.0, 54.5], [173.0, 59.8], [179.9, 67.3], [170.5, 67.8], [160.0, 47.0],
+                            [154.4, 46.2], [162.0, 55.0], [176.5, 83.0], [160.0, 54.4], [152.0, 45.8],
+                            [162.1, 53.6], [170.0, 73.2], [160.2, 52.1], [161.3, 67.9], [166.4, 56.6],
+                            [168.9, 62.3], [163.8, 58.5], [167.6, 54.5], [160.0, 50.2], [161.3, 60.3],
+                            [167.6, 58.3], [165.1, 56.2], [160.0, 50.2], [170.0, 72.9], [157.5, 59.8],
+                            [167.6, 61.0], [160.7, 69.1], [163.2, 55.9], [152.4, 46.5], [157.5, 54.3],
+                            [168.3, 54.8], [180.3, 60.7], [165.5, 60.0], [165.0, 62.0], [164.5, 60.3],
+                            [156.0, 52.7], [160.0, 74.3], [163.0, 62.0], [165.7, 73.1], [161.0, 80.0],
+                            [162.0, 54.7], [166.0, 53.2], [174.0, 75.7], [172.7, 61.1], [167.6, 55.7],
+                            [151.1, 48.7], [164.5, 52.3], [163.5, 50.0], [152.0, 59.3], [169.0, 62.5],
+                            [164.0, 55.7], [161.2, 54.8], [155.0, 45.9], [170.0, 70.6], [176.2, 67.2],
+                            [170.0, 69.4], [162.5, 58.2], [170.3, 64.8], [164.1, 71.6], [169.5, 52.8],
+                            [163.2, 59.8], [154.5, 49.0], [159.8, 50.0], [173.2, 69.2], [170.0, 55.9],
+                            [161.4, 63.4], [169.0, 58.2], [166.2, 58.6], [159.4, 45.7], [162.5, 52.2],
+                            [159.0, 48.6], [162.8, 57.8], [159.0, 55.6], [179.8, 66.8], [162.9, 59.4],
+                            [161.0, 53.6], [151.1, 73.2], [168.2, 53.4], [168.9, 69.0], [173.2, 58.4],
+                            [171.8, 56.2], [178.0, 70.6], [164.3, 59.8], [163.0, 72.0], [168.5, 65.2],
+                            [166.8, 56.6], [172.7, 105.2], [163.5, 51.8], [169.4, 63.4], [167.8, 59.0],
+                            [159.5, 47.6], [167.6, 63.0], [161.2, 55.2], [160.0, 45.0], [163.2, 54.0],
+                            [162.2, 50.2], [161.3, 60.2], [149.5, 44.8], [157.5, 58.8], [163.2, 56.4],
+                            [172.7, 62.0], [155.0, 49.2], [156.5, 67.2], [164.0, 53.8], [160.9, 54.4],
+                            [162.8, 58.0], [167.0, 59.8], [160.0, 54.8], [160.0, 43.2], [168.9, 60.5],
+                            [158.2, 46.4], [156.0, 64.4], [160.0, 48.8], [167.1, 62.2], [158.0, 55.5],
+                            [167.6, 57.8], [156.0, 54.6], [162.1, 59.2], [173.4, 52.7], [159.8, 53.2],
+                            [170.5, 64.5], [159.2, 51.8], [157.5, 56.0], [161.3, 63.6], [162.6, 63.2],
+                            [160.0, 59.5], [168.9, 56.8], [165.1, 64.1], [162.6, 50.0], [165.1, 72.3],
+                            [166.4, 55.0], [160.0, 55.9], [152.4, 60.4], [170.2, 69.1], [162.6, 84.5],
+                            [170.2, 55.9], [158.8, 55.5], [172.7, 69.5], [167.6, 76.4], [162.6, 61.4],
+                            [167.6, 65.9], [156.2, 58.6], [175.2, 66.8], [172.1, 56.6], [162.6, 58.6],
+                            [160.0, 55.9], [165.1, 59.1], [182.9, 81.8], [166.4, 70.7], [165.1, 56.8],
+                            [177.8, 60.0], [165.1, 58.2], [175.3, 72.7], [154.9, 54.1], [158.8, 49.1],
+                            [172.7, 75.9], [168.9, 55.0], [161.3, 57.3], [167.6, 55.0], [165.1, 65.5],
+                            [175.3, 65.5], [157.5, 48.6], [163.8, 58.6], [167.6, 63.6], [165.1, 55.2],
+                            [165.1, 62.7], [168.9, 56.6], [162.6, 53.9], [164.5, 63.2], [176.5, 73.6],
+                            [168.9, 62.0], [175.3, 63.6], [159.4, 53.2], [160.0, 53.4], [170.2, 55.0],
+                            [162.6, 70.5], [167.6, 54.5], [162.6, 54.5], [160.7, 55.9], [160.0, 59.0],
+                            [157.5, 63.6], [162.6, 54.5], [152.4, 47.3], [170.2, 67.7], [165.1, 80.9],
+                            [172.7, 70.5], [165.1, 60.9], [170.2, 63.6], [170.2, 54.5], [170.2, 59.1],
+                            [161.3, 70.5], [167.6, 52.7], [167.6, 62.7], [165.1, 86.3], [162.6, 66.4],
+                            [152.4, 67.3], [168.9, 63.0], [170.2, 73.6], [175.2, 62.3], [175.2, 57.7],
+                            [160.0, 55.4], [165.1, 104.1], [174.0, 55.5], [170.2, 77.3], [160.0, 80.5],
+                            [167.6, 64.5], [167.6, 72.3], [167.6, 61.4], [154.9, 58.2], [162.6, 81.8],
+                            [175.3, 63.6], [171.4, 53.4], [157.5, 54.5], [165.1, 53.6], [160.0, 60.0],
+                            [174.0, 73.6], [162.6, 61.4], [174.0, 55.5], [162.6, 63.6], [161.3, 60.9],
+                            [156.2, 60.0], [149.9, 46.8], [169.5, 57.3], [160.0, 64.1], [175.3, 63.6],
+                            [169.5, 67.3], [160.0, 75.5], [172.7, 68.2], [162.6, 61.4], [157.5, 76.8],
+                            [176.5, 71.8], [164.4, 55.5], [160.7, 48.6], [174.0, 66.4], [163.8, 67.3]
+                            ]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartRadar() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: {
+                        text: 'Basic Radar Chart'
+                    },
+                    legend: {
+                        data: ['Allocated Budget', 'Actual Spending']
+                    },
+                    radar: {
+                        // shape: 'circle',
+                        indicator: [
+                            { name: 'Sales', max: 6500 },
+                            { name: 'Administration', max: 16000 },
+                            { name: 'Information Technology', max: 30000 },
+                            { name: 'Customer Support', max: 38000 },
+                            { name: 'Development', max: 52000 },
+                            { name: 'Marketing', max: 25000 }
+                        ]
+                    },
+                    series: [
+                        {
+                            name: 'Budget vs spending',
+                            type: 'radar',
+                            data: [
+                                {
+                                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                                    name: 'Allocated Budget'
+                                },
+                                {
+                                    value: [5000, 14000, 28000, 26000, 42000, 21000],
+                                    name: 'Actual Spending'
+                                }
+                            ]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartBoxplot() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: [
+                        {
+                            text: 'Michelson-Morley Experiment',
+                            left: 'center'
+                        },
+                        {
+                            text: 'upper: Q3 + 1.5 * IQR \nlower: Q1 - 1.5 * IQR',
+                            borderColor: '#999',
+                            borderWidth: 1,
+                            textStyle: {
+                                fontWeight: 'normal',
+                                fontSize: 14,
+                                lineHeight: 20
+                            },
+                            left: '10%',
+                            top: '90%'
+                        }
+                    ],
+                    dataset: [
+                        {
+                            // prettier-ignore
+                            source: [
+                                [850, 740, 900, 1070, 930, 850, 950, 980, 980, 880, 1000, 980, 930, 650, 760, 810, 1000, 1000, 960, 960],
+                                [960, 940, 960, 940, 880, 800, 850, 880, 900, 840, 830, 790, 810, 880, 880, 830, 800, 790, 760, 800],
+                                [880, 880, 880, 860, 720, 720, 620, 860, 970, 950, 880, 910, 850, 870, 840, 840, 850, 840, 840, 840],
+                                [890, 810, 810, 820, 800, 770, 760, 740, 750, 760, 910, 920, 890, 860, 880, 720, 840, 850, 850, 780],
+                                [890, 840, 780, 810, 760, 810, 790, 810, 820, 850, 870, 870, 810, 740, 810, 940, 950, 800, 810, 870]
+                            ]
+                        },
+                        {
+                            transform: {
+                                type: 'boxplot',
+                                config: { itemNameFormatter: 'expr {value}' }
+                            }
+                        },
+                        {
+                            fromDatasetIndex: 1,
+                            fromTransformResult: 1
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'item',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: true,
+                        nameGap: 30,
+                        splitArea: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'km/s minus 299,000',
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'boxplot',
+                            type: 'boxplot',
+                            datasetIndex: 1
+                        },
+                        {
+                            name: 'outlier',
+                            type: 'scatter',
+                            datasetIndex: 2
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+
+        function NewChartHeatmap() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                // prettier-ignore
+                const hours = [
+                    '12a', '1a', '2a', '3a', '4a', '5a', '6a',
+                    '7a', '8a', '9a', '10a', '11a',
+                    '12p', '1p', '2p', '3p', '4p', '5p',
+                    '6p', '7p', '8p', '9p', '10p', '11p'
+                ];
+                // prettier-ignore
+                const days = [
+                    'Saturday', 'Friday', 'Thursday',
+                    'Wednesday', 'Tuesday', 'Monday', 'Sunday'
+                ];
+                // prettier-ignore
+                const data = [[0, 0, 5], [0, 1, 1], [0, 2, 0], [0, 3, 0], [0, 4, 0], [0, 5, 0], [0, 6, 0], [0, 7, 0], [0, 8, 0], [0, 9, 0], [0, 10, 0], [0, 11, 2], [0, 12, 4], [0, 13, 1], [0, 14, 1], [0, 15, 3], [0, 16, 4], [0, 17, 6], [0, 18, 4], [0, 19, 4], [0, 20, 3], [0, 21, 3], [0, 22, 2], [0, 23, 5], [1, 0, 7], [1, 1, 0], [1, 2, 0], [1, 3, 0], [1, 4, 0], [1, 5, 0], [1, 6, 0], [1, 7, 0], [1, 8, 0], [1, 9, 0], [1, 10, 5], [1, 11, 2], [1, 12, 2], [1, 13, 6], [1, 14, 9], [1, 15, 11], [1, 16, 6], [1, 17, 7], [1, 18, 8], [1, 19, 12], [1, 20, 5], [1, 21, 5], [1, 22, 7], [1, 23, 2], [2, 0, 1], [2, 1, 1], [2, 2, 0], [2, 3, 0], [2, 4, 0], [2, 5, 0], [2, 6, 0], [2, 7, 0], [2, 8, 0], [2, 9, 0], [2, 10, 3], [2, 11, 2], [2, 12, 1], [2, 13, 9], [2, 14, 8], [2, 15, 10], [2, 16, 6], [2, 17, 5], [2, 18, 5], [2, 19, 5], [2, 20, 7], [2, 21, 4], [2, 22, 2], [2, 23, 4], [3, 0, 7], [3, 1, 3], [3, 2, 0], [3, 3, 0], [3, 4, 0], [3, 5, 0], [3, 6, 0], [3, 7, 0], [3, 8, 1], [3, 9, 0], [3, 10, 5], [3, 11, 4], [3, 12, 7], [3, 13, 14], [3, 14, 13], [3, 15, 12], [3, 16, 9], [3, 17, 5], [3, 18, 5], [3, 19, 10], [3, 20, 6], [3, 21, 4], [3, 22, 4], [3, 23, 1], [4, 0, 1], [4, 1, 3], [4, 2, 0], [4, 3, 0], [4, 4, 0], [4, 5, 1], [4, 6, 0], [4, 7, 0], [4, 8, 0], [4, 9, 2], [4, 10, 4], [4, 11, 4], [4, 12, 2], [4, 13, 4], [4, 14, 4], [4, 15, 14], [4, 16, 12], [4, 17, 1], [4, 18, 8], [4, 19, 5], [4, 20, 3], [4, 21, 7], [4, 22, 3], [4, 23, 0], [5, 0, 2], [5, 1, 1], [5, 2, 0], [5, 3, 3], [5, 4, 0], [5, 5, 0], [5, 6, 0], [5, 7, 0], [5, 8, 2], [5, 9, 0], [5, 10, 4], [5, 11, 1], [5, 12, 5], [5, 13, 10], [5, 14, 5], [5, 15, 7], [5, 16, 11], [5, 17, 6], [5, 18, 0], [5, 19, 5], [5, 20, 3], [5, 21, 4], [5, 22, 2], [5, 23, 0], [6, 0, 1], [6, 1, 0], [6, 2, 0], [6, 3, 0], [6, 4, 0], [6, 5, 0], [6, 6, 0], [6, 7, 0], [6, 8, 0], [6, 9, 0], [6, 10, 1], [6, 11, 0], [6, 12, 2], [6, 13, 1], [6, 14, 3], [6, 15, 4], [6, 16, 0], [6, 17, 0], [6, 18, 0], [6, 19, 0], [6, 20, 1], [6, 21, 2], [6, 22, 2], [6, 23, 6]]
+                    .map(function (item) {
+                        return [item[1], item[0], item[2] || '-'];
+                    });
+                option = {
+                    tooltip: {
+                        position: 'top'
+                    },
+                    grid: {
+                        height: '50%',
+                        top: '10%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: hours,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: days,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 10,
+                        calculable: true,
+                        orient: 'horizontal',
+                        left: 'center',
+                        bottom: '15%'
+                    },
+                    series: [
+                        {
+                            name: 'Punch Card',
+                            type: 'heatmap',
+                            data: data,
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        function NewChartFunnel() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewChart();
+                chart.InitDefaultOption();
+                chart.Selected = true;
+                let option;
+                option = {
+                    title: {
+                        text: 'Funnel'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c}%'
+                    },
+                    toolbox: {
+                        feature: {
+                            dataView: { readOnly: false },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    legend: {
+                        data: ['Show', 'Click', 'Visit', 'Inquiry', 'Order']
+                    },
+                    series: [
+                        {
+                            name: 'Funnel',
+                            type: 'funnel',
+                            left: '10%',
+                            top: 60,
+                            bottom: 60,
+                            width: '80%',
+                            min: 0,
+                            max: 100,
+                            minSize: '0%',
+                            maxSize: '100%',
+                            sort: 'descending',
+                            gap: 2,
+                            label: {
+                                show: true,
+                                position: 'inside'
+                            },
+                            labelLine: {
+                                length: 10,
+                                lineStyle: {
+                                    width: 1,
+                                    type: 'solid'
+                                }
+                            },
+                            itemStyle: {
+                                borderColor: '#fff',
+                                borderWidth: 1
+                            },
+                            emphasis: {
+                                label: {
+                                    fontSize: 20
+                                }
+                            },
+                            data: [
+                                { value: 60, name: 'Visit' },
+                                { value: 40, name: 'Inquiry' },
+                                { value: 20, name: 'Order' },
+                                { value: 80, name: 'Click' },
+                                { value: 100, name: 'Show' }
+                            ]
+                        }
+                    ]
+                };
+                chart.DSC.style.option = option;
+                chart.Refresh();
+                grid.ClearSelect();
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+
+        //<li title="新建仪表盘(NewChartGauge)"><a class="fa" onclick="NewChartGauge(); ">新建仪表盘</a></li>
+        //<li title="新建柱图(NewChartBar)"><a class="fa" onclick="NewChartBar(); ">新建柱图</a></li>
+        //<li title="新建饼图(NewChartPie)"><a class="fa" onclick="NewChartPie(); ">新建饼图</a></li>
+        //<li title="新建折线图(NewChartLine)"><a class="fa" onclick="NewChartLine(); ">新建折线图</a></li>
+        //<li title="新建面积图(NewChartArea)"><a class="fa" onclick="NewChartArea(); ">新建面积图</a></li>
+        //<li title="新建散点图(NewChartScatter)"><a class="fa" onclick="NewChartScatter(); ">新建散点图</a></li>
+        //<li title="新建雷达图(NewChartRadar)"><a class="fa" onclick="NewChartRadar(); ">新建雷达图</a></li>
+        //<li title="新建盒须图(NewChartBoxplot)"><a class="fa" onclick="NewChartBoxplot(); ">新建盒须图</a></li>
+        //<li title="新建热力图(NewChartHeatmap)"><a class="fa" onclick="NewChartHeatmap(); ">新建热力图</a></li>
+        //<li title="新建漏斗图(NewChartFunnel)"><a class="fa" onclick="NewChartFunnel(); ">新建漏斗图</a></li>
+    </script>
+
+    <!--primitive-->
+    <script type="text/javascript">
+
+        function NewPrimitive() {
+            if (grid.SelectCells != null) {
+                let chart = grid.NewPrimitive();
+                grid.ClearSelect();
+                chart.Selected = true;
+                grid.Refresh();
+                grid.RePaint();
+            }
+        }
+        function PrimitiveStyle() {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            dom.value = JSON.stringify(chart.DSC.style.option);
+
+        }
+        function PrimitiveStyle() {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            let dom = document.getElementById("txtchartstyle");
+            chart.DSC.style.option = JSON.parse(dom.value);
+            chart.Refresh();
+        }
+        function PrimitiveBackImage() {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            var code = prompt("输入图片链接:", "../Image/test/96434.png");
+            chart.BackImage = code;
+            grid.RePaint();
+        }
+
+        function NewDiaplayLine() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            item.NewDiaplayLine();
+        }
+        function NewDiaplayRect() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            item.NewDiaplayRect();
+        }
+
+        function NewDiaplayText() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDiaplayText();
+            dis.Text = "设置标题内容双击";
+        }
+        function NewDiaplayCircle() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDiaplayCircle();
+        }
+        function NewDisplayableImage() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDisplayableImage();
+        }
+        function NewDisplayablePolygon() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDisplayablePolygon();
+        }
+        function NewDisplayableSector() {
+            let item = grid.GetSelectPrimitive();
+            if (item == null)
+                return;
+            let dis = item.NewDisplayableSector();
+        }
+        function PrimitiveRemove() {
+            let chart = grid.GetSelectPrimitive();
+            if (chart == null)
+                return;
+            chart.Clear();
+            grid.Primitives.remove(chart);
+            grid.RePaint();
+        }
+    </script>
+</body>
+
+</html>

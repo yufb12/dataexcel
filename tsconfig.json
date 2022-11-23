@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "noImplicitAny": true,
+        "strictBindCallApply": true,
+        "removeComments": true,
+        "sourceMap": false,
+        "suppressImplicitAnyIndexErrors":true,
+        "noImplicitThis": true,
+
+        // https://github.com/ezolenko/rollup-plugin-typescript2/issues/12#issuecomment-536173372
+        "moduleResolution": "Node",
+
+        "declaration": true,
+        "declarationMap": false,
+
+        // Compile to lib
+        // "rootDir": "test",
+        "rootDir": "src",
+
+        "importHelpers": true,
+
+        "pretty": true
+    },
+    "include": [
+        // "test/TS/*.ts"
+        "src/**/*.ts"
+    ],
+    "exclude": [
+    ]
+}

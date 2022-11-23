@@ -1,0 +1,10 @@
+/doc
+/test
+/benchmark
+.github
+.vscode
+
+npm-debug.log
+.DS_Store
+Thumbs.db
+Desktop.ini
