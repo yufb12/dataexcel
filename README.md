@@ -1,43 +1,35 @@
-ZRender
-=======
+http://www.dataexcel.cn/
+# dataexcel
+1、滚动条优化
+2、隐藏列
+3、冻结列
+4、编辑框函数 可以设置编辑框
+6、发布
+5、文件保存
+7、单元格图片
+8、函数
+9、剪切，复制
+10、单元格ID
+11、上下左右键移动	
+12、时间，日期函数
+13、下拉填充
+14、选择颜色对话框
+15、小程序嵌套
+16、BI示例
+17、保存为xles html
+18、复制格式
+19、公式
+20、数据库建表
+21、js DataTable
+22、大小改变
+23、流程图
+24、Touch
+25、ctl+->交换
+26、插入图元 背景，前景
+27、插入单元格图元 背景，前景
+pl
+1、保存到服务器
+2、绑定数据
 
-A lightweight graphic library which provides 2d draw for [Apache ECharts](https://github.com/apache/echarts).
-
-[![Build Status](https://travis-ci.com/ecomfe/zrender.svg?branch=master)](https://travis-ci.com/ecomfe/zrender) [![](https://img.shields.io/npm/dw/zrender.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/zrender) ![Commits Since 4.0.0](https://img.shields.io/github/commits-since/ecomfe/zrender/4.0.0.svg?colorB=%234c1&style=flat)
-
-## Documentation
-
-[https://ecomfe.github.io/zrender-doc/public/](https://ecomfe.github.io/zrender-doc/public/)
-
-
-## License
-
-BSD 3-Clause License
-
-Copyright (c) 2017, Baidu Inc.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+![demo image](/test/plus/Image/netdataexcel/jsdataexcel.png)
+![demo image](/test/plus/Image/netdataexcel/netexcel.png)
