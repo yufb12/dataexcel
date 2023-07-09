@@ -5968,7 +5968,7 @@
                 szie = Math.abs(e.offsetY - this.mousedownpoint.Y);
                 if (szie < 5) {
                     let d = (datetnow.valueOf() - this.downtime.valueOf()) / 1000;
-                    if (d > 0.15 && d < 0.8) {
+                    if (d > 0.5 && d < 0.8) {
                         this.InitEdit();
                     }
                 }
@@ -8044,9 +8044,9 @@
         }
         OnMouseDoubleClick(evt) {
             let ev = new EventView();
-            var obj;
+            var grid;
             try {
-                obj = this["Grid"];
+                grid = this["Grid"];
                 this.debugmode = true;
                 ev.Canvas = evt.target;
                 let dom = evt.target;
@@ -8055,19 +8055,32 @@
                 let y = evt.offsetY;
                 let evtpath = evt;
                 let path = evtpath.path;
-                let len = path.length;
                 let offsetleft = 0;
                 let offsettop = 0;
-                for (var i = 0; i < len; i++) {
-                    let domt = path[i];
-                    if (domt == obj.maindom) {
-                        break;
+                if (path != null) {
+                    let len = path.length;
+                    for (var i = 0; i < len; i++) {
+                        let domt = path[i];
+                        if (domt == grid.maindom) {
+                            break;
+                        }
+                        offsetleft = offsetleft + domt.offsetLeft;
+                        offsettop = offsettop + domt.offsetTop;
                     }
-                    offsetleft = offsetleft + domt.offsetLeft;
-                    offsettop = offsettop + domt.offsetTop;
+                }
+                else {
+                    var rect = dom.getBoundingClientRect();
+                    console.log("rect");
+                    console.log(rect);
+                    console.log("dom");
+                    console.log(dom);
+                    console.log("grid");
+                    console.log(grid);
+                    offsetleft = rect.left;
+                    offsettop = rect.top;
                 }
                 ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
-                obj.DoOnMouseDoubleClick(this, evt, ev);
+                grid.DoOnMouseDoubleClick(this, evt, ev);
             }
             catch (ex) {
                 DataExcelConsole.log("dom.OnMouseDoubleClick", ex);
@@ -8075,7 +8088,7 @@
             finally {
             }
             if (ev.NeedRePaint) {
-                obj.RePaint();
+                grid.RePaint();
             }
         }
         OnWheel(evt) {
@@ -8110,7 +8123,7 @@
             return true;
         }
         OnMouseDown(evt) {
-            var obj = this["Grid"];
+            var grid = this["Grid"];
             let ev = new EventView();
             try {
                 this.debugmode = true;
@@ -8121,19 +8134,33 @@
                 let y = evt.offsetY;
                 let evtpath = evt;
                 let path = evtpath.path;
-                let len = path.length;
                 let offsetleft = 0;
                 let offsettop = 0;
-                for (var i = 0; i < len; i++) {
-                    let domt = path[i];
-                    if (domt == obj.maindom) {
-                        break;
+                if (path != null) {
+                    let len = path.length;
+                    for (var i = 0; i < len; i++) {
+                        let domt = path[i];
+                        if (domt == grid.maindom) {
+                            break;
+                        }
+                        offsetleft = offsetleft + domt.offsetLeft;
+                        offsettop = offsettop + domt.offsetTop;
                     }
-                    offsetleft = offsetleft + domt.offsetLeft;
-                    offsettop = offsettop + domt.offsetTop;
+                }
+                else {
+                    var rect = dom.getBoundingClientRect();
+                    console.log("rect");
+                    console.log(rect);
+                    console.log("dom");
+                    console.log(dom);
+                    console.log("grid");
+                    console.log(grid);
+                    offsetleft = rect.left;
+                    offsettop = rect.top;
                 }
                 ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
-                obj.DoOnMouseDown(this, evt, ev);
+                this.DebugMouseDown = new Rect(ev.offsetPoint.X, ev.offsetPoint.Y, 4, 4);
+                grid.DoOnMouseDown(this, evt, ev);
             }
             catch (ex) {
                 DataExcelConsole.log("dom.OnMouseDown", ex);
@@ -8141,13 +8168,13 @@
             finally {
             }
             if (ev.NeedRePaint) {
-                obj.RePaint();
+                grid.RePaint();
             }
-            obj.CurrentEvent = ev.CurrentEvent;
+            grid.CurrentEvent = ev.CurrentEvent;
         }
         OnMouseUp(evt) {
             this.debugmode = false;
-            var obj = this["Grid"];
+            var grid = this["Grid"];
             let ev = new EventView();
             try {
                 this.debugmode = true;
@@ -8158,20 +8185,33 @@
                 let y = evt.offsetY;
                 let evtpath = evt;
                 let path = evtpath.path;
-                let len = path.length;
                 let offsetleft = 0;
                 let offsettop = 0;
-                for (var i = 0; i < len; i++) {
-                    let domt = path[i];
-                    if (domt == obj.maindom) {
-                        break;
+                if (path != null) {
+                    let len = path.length;
+                    for (var i = 0; i < len; i++) {
+                        let domt = path[i];
+                        if (domt == grid.maindom) {
+                            break;
+                        }
+                        offsetleft = offsetleft + domt.offsetLeft;
+                        offsettop = offsettop + domt.offsetTop;
                     }
-                    offsetleft = offsetleft + domt.offsetLeft;
-                    offsettop = offsettop + domt.offsetTop;
+                }
+                else {
+                    var rect = dom.getBoundingClientRect();
+                    console.log("rect");
+                    console.log(rect);
+                    console.log("dom");
+                    console.log(dom);
+                    console.log("grid");
+                    console.log(grid);
+                    offsetleft = rect.left;
+                    offsettop = rect.top;
                 }
                 ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
-                obj.DoOnMouseUp(this, evt, ev);
-                obj.Selectmode = SelectMode.Null;
+                grid.DoOnMouseUp(this, evt, ev);
+                grid.Selectmode = SelectMode.Null;
             }
             catch (ex) {
                 DataExcelConsole.log("dom.OnMouseUp", ex);
@@ -8179,14 +8219,14 @@
             finally {
             }
             if (ev.NeedRePaint) {
-                obj.RePaint();
+                grid.RePaint();
             }
         }
         OnMouseMove(evt) {
             if (this.debugmode) {
                 this.debugmode = false;
             }
-            let obj = this["Grid"];
+            let grid = this["Grid"];
             let ev = new EventView();
             try {
                 let dom = evt.target;
@@ -8196,19 +8236,32 @@
                 let y = evt.offsetY;
                 let evtpath = evt;
                 let path = evtpath.path;
-                let len = path.length;
                 let offsetleft = 0;
                 let offsettop = 0;
-                for (var i = 0; i < len; i++) {
-                    let domt = path[i];
-                    if (domt == obj.maindom) {
-                        break;
+                if (path != null) {
+                    let len = path.length;
+                    for (var i = 0; i < len; i++) {
+                        let domt = path[i];
+                        if (domt == grid.maindom) {
+                            break;
+                        }
+                        offsetleft = offsetleft + domt.offsetLeft;
+                        offsettop = offsettop + domt.offsetTop;
                     }
-                    offsetleft = offsetleft + domt.offsetLeft;
-                    offsettop = offsettop + domt.offsetTop;
+                }
+                else {
+                    var rect = dom.getBoundingClientRect();
+                    console.log("rect");
+                    console.log(rect);
+                    console.log("dom");
+                    console.log(dom);
+                    console.log("grid");
+                    console.log(grid);
+                    offsetleft = rect.left;
+                    offsettop = rect.top;
                 }
                 ev.offsetPoint = new Point(x + offsetleft, y + offsettop);
-                obj.DoOnMouseMove(this, evt, ev);
+                grid.DoOnMouseMove(this, evt, ev);
             }
             catch (ex) {
                 DataExcelConsole.log("dom.click", ex);
@@ -8216,7 +8269,7 @@
             finally {
             }
             if (ev.NeedRePaint) {
-                obj.RePaint();
+                grid.RePaint();
             }
         }
         OnKeyPress(evt) {
@@ -8540,6 +8593,9 @@
                     g.FillRectangleColor("red", this.DebugRect);
                     g.DrawTextColor(this.Font, "red", this.DebugText, this.ContentLeft, this.ContentTop);
                     g.DrawTextColor(this.Font, "red", this.DebugText2, this.ContentLeft, this.ContentTop + 30);
+                }
+                if (this.DebugMouseDown != null) {
+                    g.FillRectangleColor("blue", this.DebugMouseDown);
                 }
                 let now = new Date();
                 let timespan = now.getTime() - this.StartTime.getTime();

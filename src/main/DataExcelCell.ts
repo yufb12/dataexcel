@@ -822,7 +822,7 @@ export class DataExcelCell implements IViewEvent, IZoom
             if (szie < 5)
             {
                 let d = (datetnow.valueOf() - this.downtime.valueOf()) / 1000;
-                if (d > 0.15 && d < 0.8)
+                if (d > 0.5 && d < 0.8)
                 {
                     this.InitEdit();
                 }
